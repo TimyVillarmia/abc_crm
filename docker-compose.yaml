@@ -1,0 +1,39 @@
+services:
+  web:
+    image: odoo:19.0
+    container_name: abc_crm
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    volumes:
+      - ./:/mnt/extra-addons/abc_crm
+      # Persist filestore for attachments
+      - abc-crm-web-data:/var/lib/odoo
+    environment:
+      - HOST=db
+      - USER=admin
+      - PASSWORD=admin
+    # Enable developer mode with auto-reload
+    command: ["--dev=reload,qweb,xml"]
+
+  db:
+    image: postgres:18
+    container_name: abc_crm_db
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+    volumes:
+      - abc-crm-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  abc-crm-web-data:
+  abc-crm-db-data:
