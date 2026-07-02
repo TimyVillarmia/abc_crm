@@ -1,6 +1,6 @@
 <odoo>
     <data noupdate="1">
-        <record id="lost_reason_unqualified" model="crm.lead.lost.reason">
+        <record id="lost_reason_unqualified" model="crm.lost.reason">
             <field name="name">Did Not Meet Passing Rate</field>
         </record>
     </data>

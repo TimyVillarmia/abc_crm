@@ -6,7 +6,6 @@ from odoo import fields, http
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.http import request
 
-
 _logger = logging.getLogger(__name__)
 
 
