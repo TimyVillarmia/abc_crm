@@ -143,6 +143,8 @@ Desktop.ini
 # Docker
 # =========================================================
 
+docker-compose.yaml
+
 # Docker overrides
 docker-compose.override.yml
 

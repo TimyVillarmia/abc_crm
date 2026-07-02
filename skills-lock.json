@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "odoo-19": {
+      "source": "unclecatvn/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/odoo-19.0/SKILL.md",
+      "computedHash": "7d0a74fa7f84e9acd9665d7506bb2880db7eec3f51f52ccf9eca977de6f67d27"
+    }
+  }
+}
