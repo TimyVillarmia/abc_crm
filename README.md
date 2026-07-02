@@ -9,6 +9,7 @@ The addon extends `crm.lead` with project qualification fields, lead rating, aut
 ```text
 .
 ├── .github/workflows/ci.yml
+├── .pre-commit-config.yaml
 ├── __init__.py
 ├── __manifest__.py
 ├── controllers/
@@ -22,6 +23,7 @@ The addon extends `crm.lead` with project qualification fields, lead rating, aut
 │   ├── crm_lead.py
 │   ├── res_city.py
 │   └── res_region.py
+├── pyproject.toml
 ├── security/
 │   ├── ir.model.access.csv
 │   └── res_groups.xml
@@ -109,15 +111,22 @@ Create a local virtual environment for tooling:
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install ruff
+pip install ruff pre-commit pylint pylint-odoo
 ```
+
+Ruff is configured in `pyproject.toml`:
+
+- Python target: `py314`
+- Line length: `88`
+- Enabled lint families: `E`, `F`, `I`
+- Format style: double quotes, spaces, automatic line endings
 
 Run local checks:
 
 ```bash
 ruff check .
 ruff format --check .
-python -m compileall .
+python3 -m compileall .
 ```
 
 Apply safe Ruff fixes and formatting:
@@ -126,6 +135,20 @@ Apply safe Ruff fixes and formatting:
 ruff check . --fix
 ruff format .
 ```
+
+Install pre-commit hooks:
+
+```bash
+pre-commit install
+```
+
+Run all pre-commit hooks manually:
+
+```bash
+pre-commit run --all-files
+```
+
+The pre-commit configuration checks whitespace, EOF, YAML, TOML, XML, large files, merge conflicts, case conflicts, line endings, debug statements, private keys, Ruff lint/format, Python compilation, and guards against committing `odoo.conf` or `.env` files. The `pylint-odoo` hook is configured for manual runs.
 
 ## Tests
 
@@ -187,7 +210,7 @@ Current data/config notes:
 
 - `data/res.region.csv` loads Luzon, Visayas, and Mindanao.
 - `data/config_parameters.xml` defines `crm.passing_rate = 70`.
-- `data/lost_reason_data.xml` defines `abc_crm.lost_reason_unqualified`.
+- `data/lost_reason_data.xml` defines `abc_crm.lost_reason_unqualified` on Odoo 19 model `crm.lost.reason`.
 - `security/res_groups.xml` defines `abc_crm.group_sales_manager`.
 - `security/ir.model.access.csv` grants internal users read-only access to `res.region`.
 
@@ -323,5 +346,6 @@ Jobs:
 - `docker-compose.yaml` correctly mounts the repository to `/mnt/extra-addons/abc_crm`.
 - The manifest now includes `data/lost_reason_data.xml`.
 - `data/config_parameters.xml` defines `crm.passing_rate`, while `models/crm_lead.py` reads `abc_crm.auto_convert_threshold`; unless the latter is configured in Odoo, the code uses `70.0`.
-- There is no checked-in `pyproject.toml`; Ruff currently uses defaults.
+- `pyproject.toml` is checked in and configures Ruff for Python 3.14.
+- `.pre-commit-config.yaml` is checked in and should be used for local quality gates.
 - Docker-based test verification was not completed in this session because Docker access approval was interrupted.
