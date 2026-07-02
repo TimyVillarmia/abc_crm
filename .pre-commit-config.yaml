@@ -45,3 +45,10 @@ repos:
         entry: bash -c '! find . -maxdepth 2 \( -name ".env" -o -name ".env.*" \) | grep -q . || (echo "Do not commit .env files."; exit 1)'
         language: system
         pass_filenames: false
+
+      - id: pylint-odoo
+        name: Pylint Odoo check
+        entry: pylint . --load-plugins=pylint_odoo --disable=all --enable=odoolint
+        language: system
+        pass_filenames: false
+        stages: [manual]
