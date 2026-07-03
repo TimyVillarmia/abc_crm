@@ -6,6 +6,7 @@
     "depends": [
         "crm",
         "sales_team",
+        "spreadsheet_dashboard",
         "base",
     ],
     "data": [
@@ -16,6 +17,7 @@
         "security/ir.model.access.csv",
         "security/ir_rule.xml",
         "data/lost_reason_data.xml",
+        "views/menu.xml",
     ],
     "installable": True,
     "application": True,
