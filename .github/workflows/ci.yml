@@ -1,6 +1,8 @@
 name: Odoo CI
 
 on:
+    workflow_dispatch:
+
     pull_request:
         branches:
             - main
@@ -8,8 +10,12 @@ on:
             - "**/*.py"
             - "**/*.xml"
             - "**/*.csv"
+            - "static/src/**/*.js"
+            - "static/src/**/*.scss"
             - "__manifest__.py"
             - "pyproject.toml"
+            - ".pre-commit-config.yaml"
+            - "docker-compose.yaml"
             - ".github/workflows/ci.yml"
 
     push:
@@ -19,8 +25,12 @@ on:
             - "**/*.py"
             - "**/*.xml"
             - "**/*.csv"
+            - "static/src/**/*.js"
+            - "static/src/**/*.scss"
             - "__manifest__.py"
             - "pyproject.toml"
+            - ".pre-commit-config.yaml"
+            - "docker-compose.yaml"
             - ".github/workflows/ci.yml"
 
 permissions:
@@ -40,6 +50,7 @@ jobs:
     lint:
         name: Code Quality
         runs-on: ubuntu-latest
+        timeout-minutes: 10
 
         steps:
             - name: Checkout repository
@@ -67,6 +78,17 @@ jobs:
               run: |
                   python -m compileall .
 
+            - name: Check XML syntax
+              run: |
+                  python - <<'PY'
+                  from pathlib import Path
+                  import xml.etree.ElementTree as ET
+
+                  for path in sorted(Path(".").rglob("*.xml")):
+                      ET.parse(path)
+                      print(path)
+                  PY
+
             - name: Pylint Odoo check
               continue-on-error: true
               run: |
@@ -79,6 +101,7 @@ jobs:
         name: Odoo Module Tests
         runs-on: ubuntu-latest
         needs: lint
+        timeout-minutes: 25
 
         services:
             postgres:
@@ -139,6 +162,7 @@ jobs:
         name: Security Checks
         runs-on: ubuntu-latest
         needs: lint
+        timeout-minutes: 10
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
         steps:
