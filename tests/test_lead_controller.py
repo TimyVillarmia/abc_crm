@@ -1,4 +1,5 @@
 import json
+import re
 
 from odoo.tests import HttpCase, tagged
 
@@ -24,6 +25,30 @@ class TestAbcCrmLeadController(HttpCase):
                 "Content-Type": "application/json",
             },
         )
+
+    def _post_website_lead(self, payload):
+        website_payload = {
+            **payload,
+            "csrf_token": self._csrf_token(),
+        }
+        return self.url_open(
+            "/abc_crm/website/lead",
+            data=website_payload,
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
+
+    def _csrf_token(self):
+        if not hasattr(self, "_cached_csrf_token"):
+            response = self.url_open("/web/login")
+            match = re.search(
+                rb'name="csrf_token"[^>]*value="([^"]+)"',
+                response.content,
+            )
+            self.assertTrue(match, "Could not find CSRF token on login page")
+            self._cached_csrf_token = match.group(1).decode()
+        return self._cached_csrf_token
 
     def _json_response(self, response):
         return json.loads(response.content.decode())
@@ -100,6 +125,116 @@ class TestAbcCrmLeadController(HttpCase):
         self.assertEqual(body["lead"]["utm_source"], "Website")
         self.assertEqual(body["lead"]["utm_medium"], "Form")
         self.assertEqual(body["lead"]["utm_campaign"], "June Launch")
+
+    def test_website_route_creates_lead_without_bearer_auth(self):
+        response = self._post_website_lead(self._valid_payload())
+        body = self._json_response(response)
+
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(body["success"])
+
+        lead = self.env["crm.lead"].browse(body["lead"]["id"])
+        self.assertTrue(lead.exists())
+        self.assertEqual(lead.name, "Website inquiry")
+        self.assertEqual(lead.contact_name, "Jane Buyer")
+        self.assertEqual(lead.rating, 65)
+
+    def test_website_route_rejects_missing_required_fields(self):
+        response = self._post_website_lead(
+            {
+                "contact_name": "Jane Buyer",
+            }
+        )
+        body = self._json_response(response)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(body["success"])
+        self.assertIn("Missing required field(s):", body["error"])
+        self.assertIn("partner_name", body["error"])
+
+    def test_website_route_honeypot_does_not_create_lead(self):
+        before_count = self.env["crm.lead"].search_count([])
+        payload = self._valid_payload(abc_crm_hp="filled by bot")
+
+        response = self._post_website_lead(payload)
+        body = self._json_response(response)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            body,
+            {
+                "success": True,
+                "lead": False,
+            },
+        )
+        self.assertEqual(self.env["crm.lead"].search_count([]), before_count)
+
+    def test_website_route_reuses_existing_utm_records_by_name(self):
+        utm_values = {
+            "utm_source": "Website Route Source",
+            "utm_medium": "Website Route Medium",
+            "utm_campaign": "Website Route Campaign",
+        }
+
+        first_response = self._post_website_lead(self._valid_payload(**utm_values))
+        first_body = self._json_response(first_response)
+
+        second_response = self._post_website_lead(
+            self._valid_payload(message="Second website route inquiry", **utm_values)
+        )
+        second_body = self._json_response(second_response)
+
+        self.assertEqual(first_response.status_code, 201)
+        self.assertEqual(second_response.status_code, 201)
+
+        first_lead = self.env["crm.lead"].browse(first_body["lead"]["id"])
+        second_lead = self.env["crm.lead"].browse(second_body["lead"]["id"])
+
+        self.assertEqual(first_lead.source_id, second_lead.source_id)
+        self.assertEqual(first_lead.medium_id, second_lead.medium_id)
+        self.assertEqual(first_lead.campaign_id, second_lead.campaign_id)
+
+        self.assertEqual(
+            self.env["utm.source"].search_count(
+                [("name", "=", "Website Route Source")]
+            ),
+            1,
+        )
+        self.assertEqual(
+            self.env["utm.medium"].search_count(
+                [("name", "=", "Website Route Medium")]
+            ),
+            1,
+        )
+        self.assertEqual(
+            self.env["utm.campaign"].search_count(
+                [("name", "=", "Website Route Campaign")]
+            ),
+            1,
+        )
+
+    def test_website_route_qualified_lead_is_converted_without_assignment(self):
+        response = self._post_website_lead(
+            self._valid_payload(
+                is_five_storey_up="yes",
+                is_ongoing="yes",
+                is_aac_user="yes",
+                is_open="yes",
+                has_aac_needs="yes",
+                has_design_specifications="yes",
+            )
+        )
+        body = self._json_response(response)
+
+        self.assertEqual(response.status_code, 201)
+
+        lead = self.env["crm.lead"].browse(body["lead"]["id"])
+
+        self.assertEqual(lead.rating, 100)
+        self.assertEqual(lead.type, "opportunity")
+        self.assertTrue(lead.active)
+        self.assertFalse(lead.user_id)
+        self.assertFalse(lead.team_id)
 
     def test_rejects_missing_required_fields(self):
         response = self._post_lead(
