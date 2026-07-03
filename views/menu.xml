@@ -1,0 +1,65 @@
+<odoo>
+    <menuitem
+        id="abc_crm_menu_reports_root"
+        name="CRM Reports"
+        sequence="2"
+        groups="abc_crm.group_general_manager"
+    />
+    <menuitem
+        id="abc_crm_menu_forecast"
+        name="Forecast"
+        parent="abc_crm_menu_reports_root"
+        action="crm.action_opportunity_forecast"
+        sequence="1"
+        groups="abc_crm.group_general_manager"
+    />
+    <menuitem
+        id="abc_crm_menu_leads"
+        name="Leads"
+        parent="abc_crm_menu_reports_root"
+        action="crm.crm_opportunity_report_action_lead"
+        sequence="2"
+        groups="abc_crm.group_general_manager"
+    />
+    <menuitem
+        id="abc_crm_menu_pipeline"
+        name="Pipeline"
+        parent="abc_crm_menu_reports_root"
+        action="crm.crm_opportunity_report_action"
+        sequence="3"
+        groups="abc_crm.group_general_manager"
+    />
+    <menuitem
+        id="abc_crm_menu_activities"
+        name="Activities"
+        parent="abc_crm_menu_reports_root"
+        action="crm.crm_activity_report_action"
+        sequence="4"
+        groups="abc_crm.group_general_manager"
+    />
+
+    <menuitem
+        id="abc_crm_menu_dashboard"
+        name="ABC Dashboards"
+        sequence="1"
+        groups="abc_crm.group_general_manager"
+    />
+    
+    <menuitem
+        id="abc_crm_menu_dashboards"
+        name="Dashboards"
+        parent="abc_crm_menu_dashboard"
+        action="spreadsheet_dashboard.ir_actions_dashboard_action"
+        sequence="2"
+        groups="abc_crm.group_general_manager"
+    />
+
+    <menuitem
+        id="abc_crm_menu_my_dashboard"
+        name="My Dashboard"
+        parent="abc_crm_menu_dashboard"
+        action="board.open_board_my_dash_action"
+        sequence="3"
+        groups="abc_crm.group_general_manager"
+    />
+</odoo>
