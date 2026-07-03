@@ -1,0 +1,54 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^static/description/.*$
+      - id: end-of-file-fixer
+      - id: check-yaml
+        exclude: ^\.github/workflows/.*\.ya?ml$
+      - id: check-toml
+      - id: check-xml
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: debug-statements
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: python-compileall
+        name: Check Python files compile
+        entry: python -m compileall .
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: no-real-odoo-conf
+        name: Prevent committing real odoo.conf
+        entry: bash -c 'test ! -f odoo.conf || (echo "Do not commit real odoo.conf. Use odoo.conf.example instead."; exit 1)'
+        language: system
+        pass_filenames: false
+
+      - id: no-env-files
+        name: Prevent committing env files
+        entry: bash -c '! find . -maxdepth 2 \( -name ".env" -o -name ".env.*" \) | grep -q . || (echo "Do not commit .env files."; exit 1)'
+        language: system
+        pass_filenames: false
+
+      - id: pylint-odoo
+        name: Pylint Odoo check
+        entry: pylint . --load-plugins=pylint_odoo --disable=all --enable=odoolint
+        language: system
+        pass_filenames: false
+        stages: [manual]
