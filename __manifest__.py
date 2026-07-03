@@ -8,17 +8,26 @@
         "sales_team",
         "spreadsheet_dashboard",
         "base",
+        "website",
     ],
     "data": [
         "data/res.region.csv",
         "data/config_parameters.xml",
         "views/crm_lead_views.xml",
+        "views/website_snippets.xml",
+        "security/ir.model.access.csv",
         "security/res_groups.xml",
         "security/ir.model.access.csv",
         "security/ir_rule.xml",
         "data/lost_reason_data.xml",
         "views/menu.xml",
     ],
+    "assets": {
+        "web.assets_frontend": [
+            "abc_crm/static/src/js/abc_crm_multi_step_form.js",
+            "abc_crm/static/src/scss/abc_crm_multi_step_form.scss",
+        ],
+    },
     "installable": True,
     "application": True,
 }

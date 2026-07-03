@@ -10,6 +10,57 @@ _logger = logging.getLogger(__name__)
 
 
 class AbcCrmLeadController(http.Controller):
+    allowed_fields = {
+        # Contact fields
+        "contact_name",
+        "partner_name",
+        "email_from",
+        "phone",
+        # Main inquiry field
+        "message",
+        # Project fields
+        "project_name",
+        "project_location",
+        "project_type",
+        "estimated_project_value",
+        "target_completion_date",
+        "company_type",
+        # Qualification criteria
+        "is_five_storey_up",
+        "is_ongoing",
+        "is_aac_user",
+        "is_open",
+        "has_aac_needs",
+        "has_design_specifications",
+        # UTM fields
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+    }
+
+    required_text_fields = [
+        "contact_name",
+        "partner_name",
+        "email_from",
+        "phone",
+        "message",
+        "project_name",
+        "project_location",
+        "project_type",
+        "company_type",
+        "utm_source",
+        "utm_medium",
+    ]
+
+    required_boolean_fields = [
+        "is_five_storey_up",
+        "is_ongoing",
+        "is_aac_user",
+        "is_open",
+        "has_aac_needs",
+        "has_design_specifications",
+    ]
+
     @http.route(
         "/abc_crm/lead",
         type="http",
@@ -24,144 +75,8 @@ class AbcCrmLeadController(http.Controller):
         if not isinstance(payload, dict):
             return self._json_error("Request body must be a JSON object.", 400)
 
-        allowed_fields = {
-            # Contact fields
-            "contact_name",
-            "partner_name",
-            "email_from",
-            "phone",
-            # Main inquiry field
-            "message",
-            # Project fields
-            "project_name",
-            "project_location",
-            "project_type",
-            "estimated_project_value",
-            "target_completion_date",
-            "company_type",
-            # Qualification criteria
-            "is_five_storey_up",
-            "is_ongoing",
-            "is_aac_user",
-            "is_open",
-            "has_aac_needs",
-            "has_design_specifications",
-            # UTM fields
-            "utm_source",
-            "utm_medium",
-            "utm_campaign",
-        }
-
-        unknown_fields = sorted(set(payload.keys()) - allowed_fields)
-        if unknown_fields:
-            return self._json_error(
-                "Unknown field(s): %s" % ", ".join(unknown_fields),
-                400,
-            )
-
-        required_text_fields = [
-            "contact_name",
-            "partner_name",
-            "email_from",
-            "phone",
-            "message",
-            "project_name",
-            "project_location",
-            "project_type",
-            "company_type",
-            "utm_source",
-            "utm_medium",
-        ]
-
-        missing_text_fields = [
-            field_name
-            for field_name in required_text_fields
-            if not self._clean_string(payload.get(field_name))
-        ]
-
-        required_boolean_fields = [
-            "is_five_storey_up",
-            "is_ongoing",
-            "is_aac_user",
-            "is_open",
-            "has_aac_needs",
-            "has_design_specifications",
-        ]
-
-        missing_boolean_fields = [
-            field_name
-            for field_name in required_boolean_fields
-            if field_name not in payload
-        ]
-
-        missing_fields = missing_text_fields + missing_boolean_fields
-        if missing_fields:
-            return self._json_error(
-                "Missing required field(s): %s" % ", ".join(missing_fields),
-                400,
-            )
-
         try:
-            self._validate_company_type(payload.get("company_type"))
-
-            source = self._get_or_create_utm(
-                "utm.source",
-                payload.get("utm_source"),
-            )
-
-            medium = self._get_or_create_utm(
-                "utm.medium",
-                payload.get("utm_medium"),
-            )
-
-            campaign = False
-            if self._clean_string(payload.get("utm_campaign")):
-                campaign = self._get_or_create_utm(
-                    "utm.campaign",
-                    payload.get("utm_campaign"),
-                )
-
-            lead_values = {
-                "type": "lead",
-                # User requested:
-                # message becomes the lead name.
-                "name": self._clean_string(payload.get("message")),
-                # Keep the message in description too so the full inquiry is visible.
-                "description": self._clean_string(payload.get("message")),
-                # Standard CRM/contact fields
-                "contact_name": self._clean_string(payload.get("contact_name")),
-                "partner_name": self._clean_string(payload.get("partner_name")),
-                "email_from": self._clean_string(payload.get("email_from")),
-                "phone": self._clean_string(payload.get("phone")),
-                # Project fields
-                "project_name": self._clean_string(payload.get("project_name")),
-                "project_type": self._clean_string(payload.get("project_type")),
-                "estimated_project_value": self._parse_float(
-                    payload.get("estimated_project_value")
-                ),
-                "target_completion_date": self._parse_date(
-                    payload.get("target_completion_date")
-                ),
-                "company_type": self._clean_string(payload.get("company_type")),
-                "street": self._clean_string(payload.get("project_location")),
-                "is_five_storey_up": self._parse_bool(payload.get("is_five_storey_up")),
-                "is_ongoing": self._parse_bool(payload.get("is_ongoing")),
-                "is_aac_user": self._parse_bool(payload.get("is_aac_user")),
-                "is_open": self._parse_bool(payload.get("is_open")),
-                "has_aac_needs": self._parse_bool(payload.get("has_aac_needs")),
-                "has_design_specifications": self._parse_bool(
-                    payload.get("has_design_specifications")
-                ),
-                # UTM relational fields
-                "source_id": source.id,
-                "medium_id": medium.id,
-            }
-
-            if campaign:
-                lead_values["campaign_id"] = campaign.id
-
-            lead = request.env["crm.lead"].create(lead_values)
-
+            lead = self._create_lead_from_payload(payload, sudo=False)
         except AccessError:
             return self._json_error(
                 "You do not have permission to create CRM leads or UTM records.",
@@ -176,38 +91,158 @@ class AbcCrmLeadController(http.Controller):
         return request.make_json_response(
             {
                 "success": True,
-                "lead": {
-                    "id": lead.id,
-                    "name": lead.name,
-                    "type": lead.type,
-                    "active": lead.active,
-                    "contact_name": lead.contact_name,
-                    "partner_name": lead.partner_name,
-                    "email_from": lead.email_from,
-                    "phone": lead.phone,
-                    "project_name": lead.project_name,
-                    "project_location": lead.project_location,
-                    "project_type": lead.project_type,
-                    "estimated_project_value": lead.estimated_project_value,
-                    "target_completion_date": (
-                        lead.target_completion_date.isoformat()
-                        if lead.target_completion_date
-                        else False
-                    ),
-                    "company_type": lead.company_type,
-                    "rating": lead.rating,
-                    "utm_source": lead.source_id.name or False,
-                    "utm_medium": lead.medium_id.name or False,
-                    "utm_campaign": lead.campaign_id.name or False,
-                },
+                "lead": self._serialize_lead(lead),
             },
             status=201,
         )
 
-    def _get_or_create_utm(self, model_name, name):
+    @http.route(
+        "/abc_crm/website/lead",
+        type="http",
+        auth="public",
+        methods=["POST"],
+        website=True,
+    )
+    def create_website_lead(self, **kwargs):
+        extra_fields = {"csrf_token", "abc_crm_hp"}
+        unknown_fields = sorted(set(kwargs.keys()) - self.allowed_fields - extra_fields)
+        if unknown_fields:
+            return self._json_error(
+                "Unknown field(s): %s" % ", ".join(unknown_fields),
+                400,
+            )
+
+        if self._clean_string(kwargs.get("abc_crm_hp")):
+            return request.make_json_response(
+                {
+                    "success": True,
+                    "lead": False,
+                },
+                status=200,
+            )
+
+        payload = {
+            field_name: kwargs.get(field_name)
+            for field_name in self.allowed_fields
+            if field_name in kwargs
+        }
+
+        try:
+            lead = self._create_lead_from_payload(payload, sudo=True)
+        except (ValidationError, UserError) as error:
+            return self._json_error(str(error), 400)
+        except Exception:
+            _logger.exception("Failed to create CRM lead from /abc_crm/website/lead")
+            return self._json_error("Unexpected server error.", 500)
+
+        return request.make_json_response(
+            {
+                "success": True,
+                "lead": self._serialize_lead(lead),
+            },
+            status=201,
+        )
+
+    def _create_lead_from_payload(self, payload, sudo=False):
+        self._validate_payload(payload)
+        self._validate_company_type(payload.get("company_type"))
+
+        source = self._get_or_create_utm(
+            "utm.source",
+            payload.get("utm_source"),
+            sudo=sudo,
+        )
+
+        medium = self._get_or_create_utm(
+            "utm.medium",
+            payload.get("utm_medium"),
+            sudo=sudo,
+        )
+
+        campaign = False
+        if self._clean_string(payload.get("utm_campaign")):
+            campaign = self._get_or_create_utm(
+                "utm.campaign",
+                payload.get("utm_campaign"),
+                sudo=sudo,
+            )
+
+        lead_values = {
+            "type": "lead",
+            # User requested:
+            # message becomes the lead name.
+            "name": self._clean_string(payload.get("message")),
+            # Keep the message in description too so the full inquiry is visible.
+            "description": self._clean_string(payload.get("message")),
+            # Standard CRM/contact fields
+            "contact_name": self._clean_string(payload.get("contact_name")),
+            "partner_name": self._clean_string(payload.get("partner_name")),
+            "email_from": self._clean_string(payload.get("email_from")),
+            "phone": self._clean_string(payload.get("phone")),
+            # Project fields
+            "project_name": self._clean_string(payload.get("project_name")),
+            "project_type": self._clean_string(payload.get("project_type")),
+            "estimated_project_value": self._parse_float(
+                payload.get("estimated_project_value")
+            ),
+            "target_completion_date": self._parse_date(
+                payload.get("target_completion_date")
+            ),
+            "company_type": self._clean_string(payload.get("company_type")),
+            "street": self._clean_string(payload.get("project_location")),
+            "is_five_storey_up": self._parse_bool(payload.get("is_five_storey_up")),
+            "is_ongoing": self._parse_bool(payload.get("is_ongoing")),
+            "is_aac_user": self._parse_bool(payload.get("is_aac_user")),
+            "is_open": self._parse_bool(payload.get("is_open")),
+            "has_aac_needs": self._parse_bool(payload.get("has_aac_needs")),
+            "has_design_specifications": self._parse_bool(
+                payload.get("has_design_specifications")
+            ),
+            # UTM relational fields
+            "source_id": source.id,
+            "medium_id": medium.id,
+        }
+
+        if campaign:
+            lead_values["campaign_id"] = campaign.id
+
+        lead_model = request.env["crm.lead"]
+        if sudo:
+            lead_model = lead_model.sudo()
+
+        return lead_model.create(lead_values)
+
+    def _validate_payload(self, payload):
+        unknown_fields = sorted(set(payload.keys()) - self.allowed_fields)
+        if unknown_fields:
+            raise ValidationError("Unknown field(s): %s" % ", ".join(unknown_fields))
+
+        missing_text_fields = [
+            field_name
+            for field_name in self.required_text_fields
+            if not self._clean_string(payload.get(field_name))
+        ]
+
+        missing_boolean_fields = [
+            field_name
+            for field_name in self.required_boolean_fields
+            if field_name not in payload
+        ]
+
+        missing_fields = missing_text_fields + missing_boolean_fields
+        if missing_fields:
+            raise ValidationError(
+                "Missing required field(s): %s" % ", ".join(missing_fields)
+            )
+
+    def _get_or_create_utm(self, model_name, name, sudo=False):
         clean_name = self._clean_string(name)
 
-        record = request.env[model_name].search(
+        model = request.env[model_name]
+        if sudo:
+            model = model.sudo()
+
+        record = model.search(
             [("name", "=", clean_name)],
             limit=1,
         )
@@ -215,7 +250,7 @@ class AbcCrmLeadController(http.Controller):
         if record:
             return record
 
-        return request.env[model_name].create(
+        return model.create(
             {
                 "name": clean_name,
             }
@@ -283,6 +318,32 @@ class AbcCrmLeadController(http.Controller):
 
     def _clean_string(self, value):
         return str(value or "").strip()
+
+    def _serialize_lead(self, lead):
+        return {
+            "id": lead.id,
+            "name": lead.name,
+            "type": lead.type,
+            "active": lead.active,
+            "contact_name": lead.contact_name,
+            "partner_name": lead.partner_name,
+            "email_from": lead.email_from,
+            "phone": lead.phone,
+            "project_name": lead.project_name,
+            "project_location": lead.project_location,
+            "project_type": lead.project_type,
+            "estimated_project_value": lead.estimated_project_value,
+            "target_completion_date": (
+                lead.target_completion_date.isoformat()
+                if lead.target_completion_date
+                else False
+            ),
+            "company_type": lead.company_type,
+            "rating": lead.rating,
+            "utm_source": lead.source_id.name or False,
+            "utm_medium": lead.medium_id.name or False,
+            "utm_campaign": lead.campaign_id.name or False,
+        }
 
     def _json_error(self, message, status):
         return request.make_json_response(

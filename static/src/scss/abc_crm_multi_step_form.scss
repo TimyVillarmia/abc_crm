@@ -1,0 +1,306 @@
+.s_abc_crm_multi_step_form {
+    .abc-crm-form {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 36px;
+        border: 1px solid rgba(33, 37, 41, 0.1);
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 18px 48px rgba(33, 37, 41, 0.08);
+    }
+
+    .abc-crm-hp {
+        position: absolute;
+        left: -10000px;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+    }
+
+    .abc-crm-form__header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 260px;
+        gap: 24px;
+        align-items: end;
+        margin-bottom: 20px;
+    }
+
+    .abc-crm-form__eyebrow {
+        margin-bottom: 4px;
+        color: #0d6efd;
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .abc-crm-form__header h2 {
+        margin-bottom: 8px;
+        color: #212529;
+        font-size: clamp(1.75rem, 3vw, 2.35rem);
+        line-height: 1.12;
+    }
+
+    .abc-crm-form__intro {
+        max-width: 620px;
+        margin: 0;
+        color: #5f6873;
+    }
+
+    .abc-crm-form__progress-wrap {
+        min-width: 0;
+    }
+
+    .abc-crm-form__progress-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #5f6873;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .abc-crm-form__progress {
+        height: 6px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e9ecef;
+    }
+
+    .abc-crm-form__progress-bar {
+        display: block;
+        width: 25%;
+        height: 100%;
+        border-radius: inherit;
+        background: #0d6efd;
+        transition: width 180ms ease;
+    }
+
+    .abc-crm-form__steps {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 22px;
+        color: #5f6873;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .abc-crm-form__steps span {
+        min-width: 0;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: #f4f7fb;
+        text-align: center;
+    }
+
+    .abc-crm-form__alert {
+        margin-bottom: 20px;
+    }
+
+    .abc-crm-form__step-heading {
+        margin-bottom: 20px;
+    }
+
+    .abc-crm-form__step-heading p {
+        margin-bottom: 4px;
+        color: #5f6873;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    .abc-crm-form__step-heading h3 {
+        margin: 0;
+        color: #212529;
+        font-size: 1.25rem;
+    }
+
+    .form-label {
+        color: #343a40;
+        font-weight: 700;
+    }
+
+    .form-control,
+    .form-select {
+        min-height: 46px;
+        border-color: rgba(33, 37, 41, 0.16);
+        border-radius: 8px;
+    }
+
+    textarea.form-control {
+        min-height: 118px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.14);
+    }
+
+    .form-text {
+        color: #6c757d;
+    }
+
+    .abc-crm-form__criteria {
+        display: grid;
+        gap: 12px;
+    }
+
+    .abc-crm-form__criterion {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 16px;
+        min-width: 0;
+        margin: 0;
+        padding: 16px;
+        border: 1px solid rgba(33, 37, 41, 0.1);
+        border-radius: 8px;
+        background: #fbfcfe;
+    }
+
+    .abc-crm-form__criterion > legend {
+        min-width: 0;
+        margin: 0;
+        color: #343a40;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .abc-crm-form__criterion > div {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(72px, 1fr));
+        gap: 8px;
+    }
+
+    .abc-crm-form__criterion label {
+        position: relative;
+        margin: 0;
+    }
+
+    .abc-crm-form__criterion input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        cursor: pointer;
+        opacity: 0;
+    }
+
+    .abc-crm-form__criterion label span {
+        display: block;
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 1px solid rgba(33, 37, 41, 0.16);
+        border-radius: 8px;
+        background: #fff;
+        color: #343a40;
+        font-weight: 700;
+        text-align: center;
+        transition: border-color 160ms ease, background-color 160ms ease,
+            color 160ms ease;
+    }
+
+    .abc-crm-form__criterion input:checked + span {
+        border-color: #0d6efd;
+        background: #0d6efd;
+        color: #fff;
+    }
+
+    .abc-crm-form__criterion input:focus-visible + span {
+        outline: 3px solid rgba(13, 110, 253, 0.22);
+        outline-offset: 2px;
+    }
+
+    .abc-crm-form__criterion input.is-invalid + span {
+        border-color: #dc3545;
+    }
+
+    .abc-crm-form__review {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin: 0;
+    }
+
+    .abc-crm-form__review div {
+        min-width: 0;
+        padding: 14px 16px;
+        border: 1px solid rgba(33, 37, 41, 0.1);
+        border-radius: 8px;
+        background: #fbfcfe;
+    }
+
+    .abc-crm-form__review dt {
+        color: #6c757d;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    .abc-crm-form__review dd {
+        margin: 2px 0 0;
+        color: #212529;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .abc-crm-form__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 24px;
+    }
+
+    .abc-crm-form__actions .btn {
+        min-width: 112px;
+        border-radius: 8px;
+        font-weight: 700;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .s_abc_crm_multi_step_form {
+        .abc-crm-form {
+            padding: 20px;
+        }
+
+        .abc-crm-form__header {
+            grid-template-columns: 1fr;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .abc-crm-form__progress-label {
+            text-align: left;
+        }
+
+        .abc-crm-form__steps {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .abc-crm-form__criterion {
+            grid-template-columns: 1fr;
+        }
+
+        .abc-crm-form__criterion > div {
+            width: 100%;
+        }
+
+        .abc-crm-form__review {
+            grid-template-columns: 1fr;
+        }
+
+        .abc-crm-form__actions {
+            flex-direction: column-reverse;
+        }
+
+        .abc-crm-form__actions .btn {
+            width: 100%;
+        }
+    }
+}
