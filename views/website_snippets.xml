@@ -19,21 +19,14 @@
                             <h2>Tell us about your project</h2>
                             <p class="abc-crm-form__intro">Share the project basics and our team
                                 will route your inquiry to the right specialist.</p>
-                        </div>
-                        <div class="abc-crm-form__progress-wrap">
-                            <span class="abc-crm-form__progress-label">Step-by-step request</span>
-                            <div class="abc-crm-form__progress" role="progressbar" aria-valuemin="1"
-                                aria-valuemax="4" aria-label="Form progress">
-                                <span class="abc-crm-form__progress-bar" />
+                            <div class="abc-crm-form__progress-wrap">
+                                <span class="abc-crm-form__progress-label">Step progress</span>
+                                <div class="abc-crm-form__progress" role="progressbar"
+                                    aria-valuemin="1" aria-valuemax="4" aria-label="Form progress">
+                                    <span class="abc-crm-form__progress-bar" />
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="abc-crm-form__steps" aria-hidden="true">
-                        <span>Contact</span>
-                        <span>Project</span>
-                        <span>Qualification</span>
-                        <span>Review</span>
                     </div>
 
                     <div class="abc-crm-form__alert alert d-none" role="status" />
@@ -42,6 +35,8 @@
                         <div class="abc-crm-form__step-heading">
                             <p>Step 1 of 4</p>
                             <h3>Contact details</h3>
+                            <p class="abc-crm-form__step-intro">Tell us who we should contact
+                                about this inquiry.</p>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -54,7 +49,8 @@
                                 <label class="form-label" for="abc_crm_partner_name">Company</label>
                                 <input id="abc_crm_partner_name" class="form-control" type="text"
                                     name="partner_name" required="required"
-                                    autocomplete="organization" placeholder="Company or project owner" />
+                                    autocomplete="organization"
+                                    placeholder="Company or project owner" />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="abc_crm_email_from">Email</label>
@@ -82,6 +78,8 @@
                         <div class="abc-crm-form__step-heading">
                             <p>Step 2 of 4</p>
                             <h3>Project details</h3>
+                            <p class="abc-crm-form__step-intro">Share the project basics so we can
+                                understand the site, timeline, and scope.</p>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -134,61 +132,102 @@
                     <div class="abc-crm-form__step d-none" data-step="2">
                         <div class="abc-crm-form__step-heading">
                             <p>Step 3 of 4</p>
-                            <h3>Qualification</h3>
+                            <h3>Project Requirements</h3>
+                            <p class="abc-crm-form__step-intro">Please answer a few questions so
+                                our team can better understand your project needs.</p>
                         </div>
                         <div class="abc-crm-form__criteria">
                             <fieldset class="abc-crm-form__criterion">
-                                <legend>Project is five storeys or higher</legend>
+                                <legend>Is your project five storeys or higher?</legend>
                                 <div>
-                                    <label><input type="radio" name="is_five_storey_up" value="yes"
-                                            required="required" /><span>Yes</span></label>
-                                    <label><input type="radio" name="is_five_storey_up" value="no"
-                                            required="required" /><span>No</span></label>
+                                    <label>
+                                        <input type="radio" name="is_five_storey_up" value="yes"
+                                            required="required" />
+                                        <span>Yes</span>
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="is_five_storey_up" value="no"
+                                            required="required" />
+                                        <span>No</span>
+                                    </label>
                                 </div>
                             </fieldset>
                             <fieldset class="abc-crm-form__criterion">
-                                <legend>Project is ongoing</legend>
+                                <legend>Is construction already ongoing?</legend>
                                 <div>
-                                    <label><input type="radio" name="is_ongoing" value="yes"
-                                            required="required" /><span>Yes</span></label>
-                                    <label><input type="radio" name="is_ongoing" value="no"
-                                            required="required" /><span>No</span></label>
+                                    <label>
+                                        <input type="radio" name="is_ongoing" value="yes"
+                                            required="required" />
+                                        <span>Yes</span>
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="is_ongoing" value="no"
+                                            required="required" />
+                                        <span>No</span>
+                                    </label>
                                 </div>
                             </fieldset>
                             <fieldset class="abc-crm-form__criterion">
-                                <legend>Client is an AAC user</legend>
+                                <legend>Have you used AAC blocks or panels before?</legend>
                                 <div>
-                                    <label><input type="radio" name="is_aac_user" value="yes"
-                                            required="required" /><span>Yes</span></label>
-                                    <label><input type="radio" name="is_aac_user" value="no"
-                                            required="required" /><span>No</span></label>
+                                    <label>
+                                        <input type="radio" name="is_aac_user" value="yes"
+                                            required="required" />
+                                        <span>Yes</span>
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="is_aac_user" value="no"
+                                            required="required" />
+                                        <span>No</span>
+                                    </label>
                                 </div>
                             </fieldset>
                             <fieldset class="abc-crm-form__criterion">
-                                <legend>Client is open to innovative products</legend>
+                                <legend>Are you open to using alternative or innovative wall
+                                    systems?</legend>
                                 <div>
-                                    <label><input type="radio" name="is_open" value="yes"
-                                            required="required" /><span>Yes</span></label>
-                                    <label><input type="radio" name="is_open" value="no"
-                                            required="required" /><span>No</span></label>
+                                    <label>
+                                        <input type="radio" name="is_open" value="yes"
+                                            required="required" />
+                                        <span>Yes</span>
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="is_open" value="no"
+                                            required="required" />
+                                        <span>No</span>
+                                    </label>
                                 </div>
                             </fieldset>
                             <fieldset class="abc-crm-form__criterion">
-                                <legend>Client has AAC needs</legend>
+                                <legend>Are you looking for a faster, lighter, or more
+                                    cost-efficient wall system?</legend>
                                 <div>
-                                    <label><input type="radio" name="has_aac_needs" value="yes"
-                                            required="required" /><span>Yes</span></label>
-                                    <label><input type="radio" name="has_aac_needs" value="no"
-                                            required="required" /><span>No</span></label>
+                                    <label>
+                                        <input type="radio" name="has_aac_needs" value="yes"
+                                            required="required" />
+                                        <span>Yes</span>
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="has_aac_needs" value="no"
+                                            required="required" />
+                                        <span>No</span>
+                                    </label>
                                 </div>
                             </fieldset>
                             <fieldset class="abc-crm-form__criterion">
-                                <legend>Project has design specifications</legend>
+                                <legend>Are AAC blocks or panels already included in your project
+                                    plans or specifications?</legend>
                                 <div>
-                                    <label><input type="radio" name="has_design_specifications"
-                                            value="yes" required="required" /><span>Yes</span></label>
-                                    <label><input type="radio" name="has_design_specifications"
-                                            value="no" required="required" /><span>No</span></label>
+                                    <label>
+                                        <input type="radio" name="has_design_specifications"
+                                            value="yes" required="required" />
+                                        <span>Yes</span>
+                                    </label>
+                                    <label>
+                                        <input type="radio" name="has_design_specifications"
+                                            value="no" required="required" />
+                                        <span>No</span>
+                                    </label>
                                 </div>
                             </fieldset>
                         </div>
@@ -241,27 +280,27 @@
                                 <dd data-review="target_completion_date" />
                             </div>
                             <div>
-                                <dt>Five storeys or higher</dt>
+                                <dt>Project is five storeys or higher</dt>
                                 <dd data-review="is_five_storey_up" />
                             </div>
                             <div>
-                                <dt>Ongoing project</dt>
+                                <dt>Construction already ongoing</dt>
                                 <dd data-review="is_ongoing" />
                             </div>
                             <div>
-                                <dt>AAC user</dt>
+                                <dt>Used AAC blocks or panels before</dt>
                                 <dd data-review="is_aac_user" />
                             </div>
                             <div>
-                                <dt>Open to innovation</dt>
+                                <dt>Open to alternative wall systems</dt>
                                 <dd data-review="is_open" />
                             </div>
                             <div>
-                                <dt>AAC needs</dt>
+                                <dt>Looking for faster, lighter, or more cost-efficient walls</dt>
                                 <dd data-review="has_aac_needs" />
                             </div>
                             <div>
-                                <dt>Design specifications</dt>
+                                <dt>AAC included in plans or specifications</dt>
                                 <dd data-review="has_design_specifications" />
                             </div>
                         </dl>
