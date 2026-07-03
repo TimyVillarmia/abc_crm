@@ -27,10 +27,17 @@ The addon extends `crm.lead` with project qualification fields, lead rating, aut
 ├── security/
 │   ├── ir.model.access.csv
 │   └── res_groups.xml
+├── static/
+│   └── src/
+│       ├── js/
+│       │   └── abc_crm_multi_step_form.js
+│       └── scss/
+│           └── abc_crm_multi_step_form.scss
 ├── tests/
 │   └── test_lead_controller.py
 └── views/
-    └── crm_lead_views.xml
+    ├── crm_lead_views.xml
+    └── website_snippets.xml
 ```
 
 ## Local Stack
@@ -127,6 +134,14 @@ Run local checks:
 ruff check .
 ruff format --check .
 python3 -m compileall .
+python3 - <<'PY'
+from pathlib import Path
+import xml.etree.ElementTree as ET
+
+for path in sorted(Path(".").rglob("*.xml")):
+    ET.parse(path)
+    print(path)
+PY
 ```
 
 Apply safe Ruff fixes and formatting:
@@ -196,6 +211,7 @@ The addon depends on:
 
 - `crm`
 - `base`
+- `website`
 
 The current manifest loads:
 
@@ -203,8 +219,14 @@ The current manifest loads:
 - `data/config_parameters.xml`
 - `data/lost_reason_data.xml`
 - `views/crm_lead_views.xml`
+- `views/website_snippets.xml`
 - `security/ir.model.access.csv`
 - `security/res_groups.xml`
+
+Frontend assets are loaded through `web.assets_frontend`:
+
+- `static/src/js/abc_crm_multi_step_form.js`
+- `static/src/scss/abc_crm_multi_step_form.scss`
 
 Current data/config notes:
 
@@ -328,24 +350,60 @@ Accepted boolean values:
 
 Unknown payload fields are rejected.
 
+## Website Form
+
+The addon provides a website snippet named `ABC CRM Multi-Step Form`.
+
+The snippet is registered from `views/website_snippets.xml` and uses frontend assets from:
+
+- `static/src/js/abc_crm_multi_step_form.js`
+- `static/src/scss/abc_crm_multi_step_form.scss`
+
+Website form endpoint:
+
+```text
+POST /abc_crm/website/lead
+```
+
+The website route is public, uses Odoo CSRF protection, and submits form-encoded data. It accepts the same lead field names and validation rules as `POST /abc_crm/lead`, plus these form-only fields:
+
+- `csrf_token`: Odoo CSRF token.
+- `abc_crm_hp`: honeypot field; non-empty values return success without creating a lead.
+
+The snippet sets these hidden UTM defaults:
+
+- `utm_source = Website`
+- `utm_medium = Website Form`
+- `utm_campaign = Website Inquiry`
+
+The JavaScript widget handles step navigation, required-field validation, review summary rendering, AJAX submission, and success/error alerts.
+
 ## CI
 
 CI is defined in `.github/workflows/ci.yml`.
 
-It runs on pushes and pull requests to `main` when Python, XML, CSV, manifest, `pyproject.toml`, or CI workflow files change.
+It runs manually through `workflow_dispatch`, and on pushes and pull requests to `main` when Python, XML, CSV, frontend asset, manifest, local tooling, Docker Compose, README, or workflow files change.
 
 Jobs:
 
-- `lint`: runs Ruff, Ruff format check, Python compile, and non-blocking `pylint-odoo`.
+- `lint`: runs Ruff, Ruff format check, Python compile, XML syntax validation, and non-blocking `pylint-odoo`.
 - `test`: starts PostgreSQL `18`, mounts the repository as `/mnt/extra-addons/abc_crm:ro` inside `odoo:19.0`, installs `abc_crm`, and runs `--test-tags=/abc_crm`.
 - `security`: runs Gitleaks on pushes to `main`.
+
+CI timeout limits:
+
+- `lint`: 10 minutes
+- `test`: 25 minutes
+- `security`: 10 minutes
+
+There is no separate Node or SCSS build job. The repository does not include a `package.json`, and Odoo compiles the website assets in the Odoo runtime.
 
 ## Current Notes
 
 - The repository is the addon directory itself; do not document or mount it as `custom_addons/abc_crm`.
 - `docker-compose.yaml` correctly mounts the repository to `/mnt/extra-addons/abc_crm`.
-- The manifest now includes `data/lost_reason_data.xml`.
+- The manifest includes `website`, `views/website_snippets.xml`, and frontend assets under `web.assets_frontend`.
 - `data/config_parameters.xml` defines `crm.passing_rate`, while `models/crm_lead.py` reads `abc_crm.auto_convert_threshold`; unless the latter is configured in Odoo, the code uses `70.0`.
 - `pyproject.toml` is checked in and configures Ruff for Python 3.14.
 - `.pre-commit-config.yaml` is checked in and should be used for local quality gates.
-- Docker-based test verification was not completed in this session because Docker access approval was interrupted.
+- Docker-based Odoo tests are the expected integration verification path for this addon.
