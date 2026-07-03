@@ -4,10 +4,11 @@
     "version": "1.0.0",
     "license": "OEEL-1",
     "depends": [
+        "base",
+        "spreadsheet_dashboard",
+        "board",
         "crm",
         "sales_team",
-        "spreadsheet_dashboard",
-        "base",
         "website",
     ],
     "data": [
@@ -15,7 +16,6 @@
         "data/config_parameters.xml",
         "views/crm_lead_views.xml",
         "views/website_snippets.xml",
-        "security/ir.model.access.csv",
         "security/res_groups.xml",
         "security/ir.model.access.csv",
         "security/ir_rule.xml",
