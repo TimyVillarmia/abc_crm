@@ -18,11 +18,7 @@
     }
 
     .abc-crm-form__header {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 260px;
-        gap: 24px;
-        align-items: end;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
     }
 
     .abc-crm-form__eyebrow {
@@ -48,6 +44,7 @@
 
     .abc-crm-form__progress-wrap {
         min-width: 0;
+        margin-top: 18px;
     }
 
     .abc-crm-form__progress-label {
@@ -55,8 +52,7 @@
         margin-bottom: 8px;
         color: #5f6873;
         font-size: 0.875rem;
-        font-weight: 600;
-        text-align: right;
+        font-weight: 700;
     }
 
     .abc-crm-form__progress {
@@ -73,25 +69,6 @@
         border-radius: inherit;
         background: #0d6efd;
         transition: width 180ms ease;
-    }
-
-    .abc-crm-form__steps {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 8px;
-        margin-bottom: 22px;
-        color: #5f6873;
-        font-size: 0.8125rem;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-
-    .abc-crm-form__steps span {
-        min-width: 0;
-        padding: 8px 10px;
-        border-radius: 8px;
-        background: #f4f7fb;
-        text-align: center;
     }
 
     .abc-crm-form__alert {
@@ -113,6 +90,13 @@
         margin: 0;
         color: #212529;
         font-size: 1.25rem;
+    }
+
+    .abc-crm-form__step-heading .abc-crm-form__step-intro {
+        max-width: 620px;
+        margin: 8px 0 0;
+        color: #5f6873;
+        font-weight: 400;
     }
 
     .form-label {
@@ -267,20 +251,6 @@
     .s_abc_crm_multi_step_form {
         .abc-crm-form {
             padding: 20px;
-        }
-
-        .abc-crm-form__header {
-            grid-template-columns: 1fr;
-            gap: 18px;
-            align-items: start;
-        }
-
-        .abc-crm-form__progress-label {
-            text-align: left;
-        }
-
-        .abc-crm-form__steps {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .abc-crm-form__criterion {
