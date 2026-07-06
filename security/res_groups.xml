@@ -40,6 +40,34 @@
             ]"/>
         </record>
 
+        <record id="crm.crm_team_menu_config_activity_types" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (6, 0, [
+                    ref('abc_crm.group_sales_manager'),
+                ])
+            ]"/>
+        </record>
+
+        <record id="crm.res_partner_menu_customer" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (6, 0, [
+                    ref('abc_crm.group_sales_team_leader'),
+                    ref('abc_crm.group_sales_manager'),
+                    ref('abc_crm.group_marketing')
+                ])
+            ]"/>
+        </record>
+
+        <record id="crm.sales_team_menu_team_pipeline" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (6, 0, [
+                    ref('abc_crm.group_sales_team_leader'),
+                    ref('abc_crm.group_general_manager'),
+                    ref('abc_crm.group_marketing')
+                ])
+            ]"/>
+        </record>
+
         <record id="crm.crm_menu_config" model="ir.ui.menu">
             <field name="group_ids" eval="[
                 (4, ref('abc_crm.group_sales_manager')),
