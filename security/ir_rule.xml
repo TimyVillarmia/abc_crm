@@ -25,7 +25,11 @@
             <field name="name">Sales Team: Own Teams Only</field>
             <field name="model_id" ref="sales_team.model_crm_team"/>
             <field name="domain_force">[('user_id', '=', user.id)]</field>
-            <field name="groups" eval="[(4, ref('abc_crm.group_sales_team_leader'))]"/>
+            <field name="groups" eval="[
+                (4, ref('abc_crm.group_sales_team_leader')),
+                (4, ref('abc_crm.group_sales_representative')),
+                ]"
+            />
         </record>
 
         <record id="abc_crm_team_member_rule_leader_own_only" model="ir.rule">
