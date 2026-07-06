@@ -151,6 +151,29 @@
         font-weight: 700;
     }
 
+    .abc-crm-form__criterion > legend span {
+        display: block;
+    }
+
+    .abc-crm-form__criterion-kicker {
+        margin-bottom: 4px;
+        color: #0d6efd;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .abc-crm-form__criterion-list {
+        grid-column: 1;
+        margin: 8px 0 0;
+        padding-left: 18px;
+        color: #5f6873;
+    }
+
+    .abc-crm-form__criterion-list + div {
+        grid-row: 1 / span 2;
+    }
+
     .abc-crm-form__criterion > div {
         display: grid;
         grid-template-columns: repeat(2, minmax(72px, 1fr));
@@ -259,6 +282,10 @@
 
         .abc-crm-form__criterion > div {
             width: 100%;
+        }
+
+        .abc-crm-form__criterion-list + div {
+            grid-row: auto;
         }
 
         .abc-crm-form__review {
