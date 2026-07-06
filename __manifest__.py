@@ -20,7 +20,6 @@
         "security/ir.model.access.csv",
         "security/ir_rule.xml",
         "data/lost_reason_data.xml",
-        "views/menu.xml",
     ],
     "assets": {
         "web.assets_frontend": [
