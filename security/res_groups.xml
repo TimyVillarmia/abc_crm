@@ -31,12 +31,19 @@
         <record id="crm.crm_menu_root" model="ir.ui.menu">
             <field name="group_ids" eval="[
                 (4, ref('abc_crm.group_crm_own')),
+                (4, ref('abc_crm.group_general_manager')),
             ]"/>
         </record>
 
         <record id="crm.crm_lead_menu_my_activities" model="ir.ui.menu">
             <field name="group_ids" eval="[
                 (4, ref('abc_crm.group_crm_own')),
+            ]"/>
+        </record>
+
+        <record id="crm.crm_menu_report" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_general_manager')),
             ]"/>
         </record>
 
@@ -90,5 +97,18 @@
                 (4, ref('abc_crm.group_sales_representative')),
             ]"/>
         </record>
+
+        <record id="board.menu_board_my_dash" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_general_manager')),
+            ]"/>
+        </record>
+
+        <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_general_manager')),
+            ]"/>
+        </record>
+
     </data>
 </odoo>
