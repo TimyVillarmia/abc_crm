@@ -27,7 +27,7 @@
                 <attribute name="readonly">is_restricted</attribute>
             </xpath>
 
-            <xpath expr="(//field[@name='team_id'])[2]" position="attributes">
+            <xpath expr="(//field[@name='user_id'])[2]" position="attributes">
                 <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
                 <attribute name="invisible">type != 'opportunity'</attribute>
                 <attribute name="readonly">is_restricted</attribute>

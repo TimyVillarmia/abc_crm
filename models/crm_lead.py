@@ -2,7 +2,7 @@ from odoo import api, fields, models
 
 
 class CrmLead(models.Model):
-    _inherit = ["crm.lead"]
+    _inherit = "crm.lead"
 
     project_name = fields.Char("Project Name")
     project_location = fields.Char(
