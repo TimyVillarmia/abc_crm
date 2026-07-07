@@ -34,6 +34,12 @@ class CrmLead(models.Model):
     has_design_specifications = fields.Boolean()
     rating = fields.Integer(compute="_compute_lead_rating")
     allowed_user_ids = fields.Many2many( "res.users", compute="_compute_allowed_user_ids",)    
+    is_restricted = fields.Boolean(compute='_compute_is_restricted')
+    
+    def _compute_is_restricted(self):
+        is_restricted = self.env.user.has_group('abc_crm.group_marketing') or self.env.user.has_group('abc_crm.group_general_manager')
+        for lead in self:
+            lead.is_restricted = is_restricted
     
     @api.depends("team_id")
     def _compute_allowed_user_ids(self):
