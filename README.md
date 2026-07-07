@@ -9,6 +9,7 @@ The addon extends `crm.lead` with project qualification fields, lead rating, aut
 ```text
 .
 ├── .github/workflows/ci.yml
+├── .github/pull_request_template.md
 ├── .pre-commit-config.yaml
 ├── __init__.py
 ├── __manifest__.py
@@ -26,6 +27,7 @@ The addon extends `crm.lead` with project qualification fields, lead rating, aut
 ├── pyproject.toml
 ├── security/
 │   ├── ir.model.access.csv
+│   ├── ir_rule.xml
 │   └── res_groups.xml
 ├── static/
 │   └── src/
@@ -209,19 +211,23 @@ docker compose run --rm web odoo \
 
 The addon depends on:
 
-- `crm`
 - `base`
+- `spreadsheet_dashboard`
+- `board`
+- `crm`
+- `sales_team`
 - `website`
 
 The current manifest loads:
 
 - `data/res.region.csv`
 - `data/config_parameters.xml`
-- `data/lost_reason_data.xml`
 - `views/crm_lead_views.xml`
 - `views/website_snippets.xml`
-- `security/ir.model.access.csv`
 - `security/res_groups.xml`
+- `security/ir.model.access.csv`
+- `security/ir_rule.xml`
+- `data/lost_reason_data.xml`
 
 Frontend assets are loaded through `web.assets_frontend`:
 
@@ -233,8 +239,9 @@ Current data/config notes:
 - `data/res.region.csv` loads Luzon, Visayas, and Mindanao.
 - `data/config_parameters.xml` defines `crm.passing_rate = 70`.
 - `data/lost_reason_data.xml` defines `abc_crm.lost_reason_unqualified` on Odoo 19 model `crm.lost.reason`.
-- `security/res_groups.xml` defines `abc_crm.group_sales_manager`.
-- `security/ir.model.access.csv` grants internal users read-only access to `res.region`.
+- `security/res_groups.xml` defines CRM role groups and adjusts CRM, board, dashboard, customer, team, and configuration menu visibility.
+- `security/ir.model.access.csv` grants role-based access to regions, CRM leads, CRM tags, sales teams, sales team members, and lead scoring frequency.
+- `security/ir_rule.xml` restricts representative and team-leader access to their own leads, teams, or team members.
 
 ## CRM Behavior
 
@@ -242,6 +249,7 @@ Current data/config notes:
 
 - Project fields: `project_name`, `project_location`, `project_type`, `estimated_project_value`, `target_completion_date`, `company_type`, `region_id`
 - Qualification fields: `is_five_storey_up`, `is_ongoing`, `is_aac_user`, `is_open`, `has_aac_needs`, `has_design_specifications`
+- Assignment helper fields: `allowed_user_ids`, `is_restricted`
 - Computed rating field: `rating`
 
 Rating rules:
@@ -262,6 +270,21 @@ When qualification fields are provided on create or changed on write:
 - If `abc_crm.auto_convert_threshold` is not configured, the code default is `70.0`.
 
 Converted opportunities are left unassigned by clearing `user_id` and `team_id`. If `abc_crm.group_sales_manager` has users, their partners are subscribed to the opportunity and receive the message `New opportunity requires assignment.`
+
+Team assignment behavior:
+
+- `allowed_user_ids` limits selectable assignees to members of the selected sales team.
+- `is_restricted` makes team and user assignment read-only for Marketing and General Manager users.
+- The CRM form replaces `state_id` with `region_id`, adds Qualification Sheet and Client Information Sheet tabs, and hides the standard Misc page.
+
+Role and menu behavior:
+
+- `abc_crm.group_crm_own` is the shared own-document restriction group.
+- `abc_crm.group_sales_representative` sees own CRM documents and own team membership records.
+- `abc_crm.group_sales_team_leader` sees own team leads, teams, and team members.
+- `abc_crm.group_sales_manager` has broader sales manager access.
+- `abc_crm.group_marketing` has all-leads access and can create/update CRM leads, but assignment fields are restricted in the CRM form.
+- `abc_crm.group_general_manager` has read-oriented CRM visibility plus board and spreadsheet dashboard menus.
 
 ## Lead Intake API
 
@@ -382,7 +405,7 @@ The JavaScript widget handles step navigation, required-field validation, review
 
 CI is defined in `.github/workflows/ci.yml`.
 
-It runs manually through `workflow_dispatch`, and on pushes and pull requests to `main` when Python, XML, CSV, frontend asset, manifest, local tooling, Docker Compose, README, or workflow files change.
+It runs manually through `workflow_dispatch`, and on pushes and pull requests to `main` when Python, XML, CSV, frontend asset, manifest, local tooling, Docker Compose, or workflow files change.
 
 Jobs:
 
@@ -402,8 +425,9 @@ There is no separate Node or SCSS build job. The repository does not include a `
 
 - The repository is the addon directory itself; do not document or mount it as `custom_addons/abc_crm`.
 - `docker-compose.yaml` correctly mounts the repository to `/mnt/extra-addons/abc_crm`.
-- The manifest includes `website`, `views/website_snippets.xml`, and frontend assets under `web.assets_frontend`.
+- The manifest includes `website`, `sales_team`, `board`, `spreadsheet_dashboard`, `views/website_snippets.xml`, `security/ir_rule.xml`, and frontend assets under `web.assets_frontend`.
 - `data/config_parameters.xml` defines `crm.passing_rate`, while `models/crm_lead.py` reads `abc_crm.auto_convert_threshold`; unless the latter is configured in Odoo, the code uses `70.0`.
 - `pyproject.toml` is checked in and configures Ruff for Python 3.14.
 - `.pre-commit-config.yaml` is checked in and should be used for local quality gates.
+- `.github/pull_request_template.md` is checked in and documents expected PR context, Odoo impact, testing, screenshots, migration notes, and review checklist items.
 - Docker-based Odoo tests are the expected integration verification path for this addon.
