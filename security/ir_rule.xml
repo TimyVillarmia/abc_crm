@@ -35,7 +35,7 @@
         <record id="abc_crm_team_member_rule_leader_own_only" model="ir.rule">
             <field name="name">Sales Team Member: Own Team Members Only</field>
             <field name="model_id" ref="sales_team.model_crm_team_member"/>
-            <field name="domain_force">[('crm_team_id.user_id', '=', user.id)]</field> 
+            <field name="domain_force">[('crm_team_id.user_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('abc_crm.group_sales_team_leader'))]"/>
         </record>
     </data>

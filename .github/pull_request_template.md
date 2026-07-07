@@ -1,75 +1,72 @@
-## 📝 Description
+## Summary
 
-<!-- Provide a clear and concise summary of what this PR does and why. -->
+<!-- What changed, why it changed, and the user/business impact. -->
 
-<!-- Include relevant context, motivation, and high-level implementation details when necessary. -->
+## Change Type
 
-## 🔗 Related Issues / Tickets
+<!-- Check all that apply. -->
 
-<!-- Link relevant GitHub Issues, Jira tickets, or other tracking items. -->
+- [ ] Bug fix
+- [ ] Feature
+- [ ] Refactor
+- [ ] Performance
+- [ ] Tests
+- [ ] Documentation
+- [ ] CI / tooling
+- [ ] Data / security / manifest
 
-<!-- Use closing keywords such as "Closes #123" or "Fixes #456" when applicable. -->
+## Odoo Impact
 
-* Fixes #
+<!-- Check all areas touched by this PR. -->
 
-## 🛠️ Type of Change
+- [ ] Python models, controllers, or business logic
+- [ ] XML views, website snippets, data, or security records
+- [ ] Website frontend assets: JS / SCSS / templates
+- [ ] Manifest, dependencies, or asset bundles
+- [ ] Tests, CI, docs, or tooling only
+- [ ] No Odoo runtime impact
 
-<!-- Check all options that apply. -->
+## Testing
 
-* [ ] 🐛 Bug fix
-* [ ] ✨ New feature
-* [ ] 💥 Breaking change
-* [ ] ⚡ Performance improvement
-* [ ] 🔨 Refactoring
-* [ ] 🧪 Test changes
-* [ ] 📚 Documentation update
-* [ ] 🔧 Configuration / Infrastructure change
-* [ ] 📦 Dependency update
+<!-- Mark what was run. Explain any skipped checks. -->
 
-## 🧪 How Has This Been Tested?
+- [ ] `ruff check .`
+- [ ] `ruff format --check .`
+- [ ] `python3 -m compileall .`
+- [ ] XML syntax parse check
+- [ ] Docker/Odoo tests with `--test-tags=/abc_crm`
+- [ ] Manual website form flow checked
+- [ ] Not applicable
 
-<!-- Describe how the changes were verified. -->
+### Manual Steps
 
-<!-- Include automated tests, manual testing steps, and relevant edge cases. -->
-
-* [ ] Unit tests
-* [ ] Integration tests
-* [ ] End-to-end tests
-* [ ] Manual testing
-* [ ] Not applicable
-
-### Manual Testing Steps
-
-<!-- Remove this section if manual testing is not applicable. -->
+<!-- Required for UI, website form, workflow, or behavior changes. Delete if not applicable. -->
 
 1.
 2.
 3.
 
-## 📸 Screenshots / Screen Recordings
+## Screenshots / UI Evidence
 
-<!-- Add visual evidence for UI or behavior changes when applicable. -->
-
-<!-- Drag and drop screenshots or recordings below. -->
+<!-- Add screenshots or recordings for website/UI changes. Write "N/A" if not applicable. -->
 
 N/A
 
-## ⚠️ Breaking Changes / Migration Notes
+## Deployment / Migration Notes
 
-<!-- Describe any breaking changes, migration steps, configuration changes, or deployment considerations. -->
-
-<!-- Write "None" if not applicable. -->
+<!-- Mention module upgrades, data changes, config parameters, permissions, or rollout risk. Write "None" if not applicable. -->
 
 None
 
-## ☑️ Pre-Merge Checklist
+## Reviewer Notes
 
-* [ ] My code follows the project's coding standards and conventions
-* [ ] I have performed a self-review of my changes
-* [ ] I have removed debugging code, temporary logs, and unused code
-* [ ] I have added or updated tests where appropriate
-* [ ] New and existing tests pass locally
-* [ ] My changes introduce no unexpected warnings or errors
-* [ ] I have updated the documentation where necessary
-* [ ] I have verified that no secrets or sensitive information were committed
-* [ ] I have reviewed any breaking changes or deployment requirements
+<!-- Call out risky files, intentional tradeoffs, or areas that need close review. -->
+
+## Checklist
+
+- [ ] I reviewed the diff before requesting review.
+- [ ] I preserved existing API, controller, and website form field names where relevant.
+- [ ] I updated tests or explained why tests were not needed.
+- [ ] I updated README or developer docs for user-facing, API, CI, or operational changes.
+- [ ] I verified no secrets, real `odoo.conf`, `.env`, or local-only files were committed.
+- [ ] I considered module upgrade, migration, and security implications for data/XML/manifest changes.
