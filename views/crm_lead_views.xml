@@ -9,7 +9,6 @@
                 <field name="region_id" placeholder="Region" />
             </field>
             <field name="team_id" position="after">
-                <field name="allowed_user_ids" invisible="1"/>
                 <field name="is_restricted" invisible="1"/>
             </field>
             <xpath expr="(//field[@name='user_id'])[1]" position="before">
@@ -19,7 +18,6 @@
                 <attribute name="invisible">type != 'opportunity'</attribute>
             </xpath>
             <xpath expr="(//field[@name='user_id'])[1]" position="attributes">
-                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
                 <attribute name="readonly">is_restricted or not team_id</attribute>
             </xpath>
 
@@ -28,7 +26,6 @@
             </xpath>
 
             <xpath expr="(//field[@name='team_id'])[2]" position="attributes">
-                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
                 <attribute name="invisible">type != 'opportunity'</attribute>
                 <attribute name="readonly">is_restricted</attribute>
             </xpath>
