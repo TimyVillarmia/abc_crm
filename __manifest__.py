@@ -22,7 +22,7 @@
         "data/lost_reason_data.xml",
     ],
     "assets": {
-        "web.assets_frontend": [
+        "web.assets_frontend": [+
             "abc_crm/static/src/js/abc_crm_multi_step_form.js",
             "abc_crm/static/src/scss/abc_crm_multi_step_form.scss",
         ],
