@@ -11,5 +11,5 @@ access_crm_lead_leader,abc.crm.lead.leader,abc_crm.model_crm_lead,abc_crm.group_
 access_crm_lead_representative,abc.crm.sales.representative,abc_crm.model_crm_lead,abc_crm.group_sales_representative,1,1,1,1
 access_crm_lead_general_manager,abc.crm.general.manager,abc_crm.model_crm_lead,abc_crm.group_general_manager,1,0,0,0
 access_crm_lead_own,abc.crm.own,abc_crm.model_crm_lead,abc_crm.group_crm_own,1,0,0,0
-access_crm_lead_marketing,abc.crm.marketing,abc_crm.model_crm_lead,abc_crm.group_marketing,1,1,1,1
+access_crm_lead_marketing,abc.crm.marketing,abc_crm.model_crm_lead,abc_crm.group_marketing,1,1,1,0
 access_crm_lead_scoring_frequency_own,abc.crm.own,crm.model_crm_lead_scoring_frequency,abc_crm.group_crm_own,1,0,0,0
