@@ -1,5 +1,9 @@
 <odoo>
     <data>
+        <record id="group_crm_own" model="res.groups">
+            <field name="name">CRM: Own Documents Only</field>
+        </record>
+
         <record id="group_sales_manager" model="res.groups">
             <field name="name">Sales Manager</field>
             <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
@@ -11,17 +15,81 @@
 
         <record id="group_sales_team_leader" model="res.groups">
             <field name="name">Sales Team Leader</field>
-            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+            <field name="implied_ids" eval="[(4, ref('abc_crm.group_crm_own'))]"/>
         </record>
 
         <record id="group_sales_representative" model="res.groups">
             <field name="name">Sales Representative</field>
-            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+            <field name="implied_ids" eval="[(4, ref('abc_crm.group_crm_own'))]"/>
         </record>
 
         <record id="group_marketing" model="res.groups">
             <field name="name">Marketing</field>
-            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
+            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
+        </record>
+
+      
+
+        <record id="crm.crm_menu_root" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_crm_own')),
+                (4, ref('abc_crm.group_general_manager')),
+            ]"/>
+        </record>
+
+        <record id="crm.crm_lead_menu_my_activities" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_crm_own')),
+            ]"/>
+        </record>
+
+        <record id="crm.crm_menu_report" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_general_manager')),
+            ]"/>
+        </record>
+
+        <record id="crm.crm_team_menu_config_activity_types" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (6, 0, [
+                    ref('abc_crm.group_sales_manager'),
+                    ref('sales_team.group_sale_manager'),
+                ])
+            ]"/>
+        </record>
+
+        <record id="crm.menu_crm_opportunities" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (6, 0, [
+                    ref('abc_crm.group_sales_representative'),
+                    ref('abc_crm.group_sales_team_leader'),
+                    ref('abc_crm.group_sales_manager'),
+                    ref('abc_crm.group_marketing'),
+                    ref('sales_team.group_sale_manager'),
+                ])
+            ]"/>
+        </record>
+
+        <record id="crm.res_partner_menu_customer" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (6, 0, [
+                    ref('abc_crm.group_sales_team_leader'),
+                    ref('abc_crm.group_sales_manager'),
+                    ref('abc_crm.group_marketing'),
+                    ref('sales_team.group_sale_manager'),
+                ])
+            ]"/>
+        </record>
+
+        <record id="crm.sales_team_menu_team_pipeline" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (6, 0, [
+                    ref('abc_crm.group_sales_team_leader'),
+                    ref('abc_crm.group_sales_manager'),
+                    ref('abc_crm.group_marketing'),
+                    ref('sales_team.group_sale_manager'),
+                ])
+            ]"/>
         </record>
 
         <record id="crm.crm_menu_config" model="ir.ui.menu">
@@ -44,6 +112,18 @@
                 (4, ref('abc_crm.group_sales_manager')),
                 (4, ref('abc_crm.group_sales_team_leader')),
                 (4, ref('abc_crm.group_sales_representative')),
+            ]"/>
+        </record>
+
+        <record id="board.menu_board_my_dash" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_general_manager')),
+            ]"/>
+        </record>
+
+        <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
+            <field name="group_ids" eval="[
+                (4, ref('abc_crm.group_general_manager')),
             ]"/>
         </record>
 

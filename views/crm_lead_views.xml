@@ -8,6 +8,33 @@
             <field name="state_id" position="replace">
                 <field name="region_id" placeholder="Region" />
             </field>
+            <field name="team_id" position="after"> 
+                <field name="allowed_user_ids" invisible="1"/>
+                <field name="is_restricted" invisible="1"/>
+            </field>
+            <xpath expr="(//field[@name='user_id'])[1]" position="before">
+                <field name="team_id"/> 
+            </xpath>
+            <xpath expr="(//field[@name='user_id'])[2]" position="attributes">
+                <attribute name="invisible">type != 'opportunity'</attribute>
+            </xpath>
+            <xpath expr="(//field[@name='user_id'])[1]" position="attributes">
+                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
+                <attribute name="readonly">is_restricted or not team_id</attribute>
+            </xpath>
+
+            <xpath expr="(//field[@name='team_id'])[1]" position="attributes">
+                <attribute name="readonly">is_restricted</attribute>
+            </xpath>
+
+            <xpath expr="(//field[@name='team_id'])[2]" position="attributes">
+                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
+                <attribute name="invisible">type != 'opportunity'</attribute>
+                <attribute name="readonly">is_restricted</attribute>
+            </xpath>
+            <xpath expr="//group[@name='Misc']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
             <xpath expr="//page[@name='internal_notes']" position="before">
                 <page string="Qualification Sheet">
                     <group string="Qualification Sheet" col="1">
