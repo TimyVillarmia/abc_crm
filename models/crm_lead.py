@@ -109,7 +109,7 @@ class CrmLead(models.Model):
         threshold = float(
             self.env["ir.config_parameter"]
             .sudo()
-            .get_param("abc_crm.auto_convert_threshold", default=70.0)
+            .get_param("abc_crm.passing_rate", default=70.0)
         )
 
         changed = self.filtered(lambda lead: lead.rating != rating_before[lead.id])

@@ -1,6 +1,6 @@
 <odoo>
     <record id="passing_rate" model="ir.config_parameter">
-        <field name="key">crm.passing_rate</field>
+        <field name="key">abc_crm.passing_rate</field>
         <field name="value">70</field>
     </record>
 </odoo>
