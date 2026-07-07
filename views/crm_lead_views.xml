@@ -8,12 +8,12 @@
             <field name="state_id" position="replace">
                 <field name="region_id" placeholder="Region" />
             </field>
-            <field name="team_id" position="after"> 
+            <field name="team_id" position="after">
                 <field name="allowed_user_ids" invisible="1"/>
                 <field name="is_restricted" invisible="1"/>
             </field>
             <xpath expr="(//field[@name='user_id'])[1]" position="before">
-                <field name="team_id"/> 
+                <field name="team_id"/>
             </xpath>
             <xpath expr="(//field[@name='user_id'])[2]" position="attributes">
                 <attribute name="invisible">type != 'opportunity'</attribute>
