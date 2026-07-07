@@ -10,10 +10,31 @@
             </field>
             <field name="team_id" position="after"> 
                 <field name="allowed_user_ids" invisible="1"/>
+                <field name="is_view_restricted" invisible="1"/>
             </field>
-            <field name="user_id" position="attributes">
+            <xpath expr="(//field[@name='user_id'])[1]" position="before">
+                <field name="team_id"/> 
+            </xpath>
+            <xpath expr="(//field[@name='user_id'])[2]" position="attributes">
+                <attribute name="invisible">type != 'opportunity'</attribute>
+            </xpath>
+            <xpath expr="(//field[@name='user_id'])[1]" position="attributes">
                 <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
-            </field>
+                <attribute name="readonly">is_view_restricted or not team_id</attribute>
+            </xpath>
+
+            <xpath expr="(//field[@name='team_id'])[1]" position="attributes">
+                <attribute name="readonly">is_view_restricted</attribute>
+            </xpath>
+
+            <xpath expr="(//field[@name='team_id'])[2]" position="attributes">
+                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
+                <attribute name="invisible">type != 'opportunity'</attribute>
+                <attribute name="readonly">is_view_restricted</attribute>
+            </xpath>
+            <xpath expr="//group[@name='Misc']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
             <xpath expr="//page[@name='internal_notes']" position="before">
                 <page string="Qualification Sheet">
                     <group string="Qualification Sheet" col="1">
