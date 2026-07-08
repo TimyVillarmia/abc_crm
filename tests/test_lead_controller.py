@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import date, timedelta
 
 from odoo.tests import HttpCase, tagged
 
@@ -57,14 +58,17 @@ class TestAbcCrmLeadController(HttpCase):
         payload = {
             "contact_name": "  Jane Buyer  ",
             "partner_name": "  ABC Construction  ",
+            "function": "  Purchasing Manager  ",
             "email_from": "  jane@example.com  ",
-            "phone": "  +63 900 000 0000  ",
+            "phone": "  +639170000000  ",
             "message": "  Website inquiry  ",
             "project_name": "  Warehouse Extension  ",
             "project_location": "  Cebu City  ",
             "project_type": "  Commercial  ",
             "estimated_project_value": "1250000.50",
-            "target_completion_date": "2026-12-31",
+            "target_completion_date": (
+                date.today() + timedelta(days=180)
+            ).isoformat(),
             "company_type": "contractor",
             "is_five_storey_up": "yes",
             "is_ongoing": "0",
@@ -80,7 +84,8 @@ class TestAbcCrmLeadController(HttpCase):
         return payload
 
     def test_create_lead_from_json_payload(self):
-        response = self._post_lead(self._valid_payload())
+        payload = self._valid_payload()
+        response = self._post_lead(payload)
         body = self._json_response(response)
 
         self.assertEqual(response.status_code, 201)
@@ -93,13 +98,17 @@ class TestAbcCrmLeadController(HttpCase):
         self.assertEqual(lead.type, "lead")
         self.assertEqual(lead.contact_name, "Jane Buyer")
         self.assertEqual(lead.partner_name, "ABC Construction")
+        self.assertEqual(lead.function, "Purchasing Manager")
         self.assertEqual(lead.email_from, "jane@example.com")
-        self.assertEqual(lead.phone, "+63 900 000 0000")
+        self.assertEqual(lead.phone, "+639170000000")
         self.assertEqual(lead.project_name, "Warehouse Extension")
         self.assertEqual(lead.street, "Cebu City")
         self.assertEqual(lead.project_type, "Commercial")
         self.assertEqual(lead.estimated_project_value, 1250000.50)
-        self.assertEqual(lead.target_completion_date.isoformat(), "2026-12-31")
+        self.assertEqual(
+            lead.target_completion_date.isoformat(),
+            payload["target_completion_date"],
+        )
         self.assertEqual(lead.company_type, "contractor")
         self.assertTrue(lead.is_five_storey_up)
         self.assertFalse(lead.is_ongoing)
@@ -118,8 +127,12 @@ class TestAbcCrmLeadController(HttpCase):
         self.assertEqual(body["lead"]["project_name"], "Warehouse Extension")
         self.assertEqual(body["lead"]["project_location"], "Cebu City")
         self.assertEqual(body["lead"]["project_type"], "Commercial")
+        self.assertEqual(body["lead"]["function"], "Purchasing Manager")
         self.assertEqual(body["lead"]["estimated_project_value"], 1250000.50)
-        self.assertEqual(body["lead"]["target_completion_date"], "2026-12-31")
+        self.assertEqual(
+            body["lead"]["target_completion_date"],
+            payload["target_completion_date"],
+        )
         self.assertEqual(body["lead"]["company_type"], "contractor")
         self.assertEqual(body["lead"]["rating"], 65)
         self.assertEqual(body["lead"]["utm_source"], "Website")
@@ -193,16 +206,19 @@ class TestAbcCrmLeadController(HttpCase):
         self.assertEqual(first_lead.source_id, second_lead.source_id)
         self.assertEqual(first_lead.medium_id, second_lead.medium_id)
         self.assertEqual(first_lead.campaign_id, second_lead.campaign_id)
+        self.assertEqual(first_lead.source_id.name, "Website")
+        self.assertEqual(first_lead.medium_id.name, "Website Form")
+        self.assertEqual(first_lead.campaign_id.name, "Website Route Campaign")
 
         self.assertEqual(
             self.env["utm.source"].search_count(
-                [("name", "=", "Website Route Source")]
+                [("name", "=", "Website")]
             ),
             1,
         )
         self.assertEqual(
             self.env["utm.medium"].search_count(
-                [("name", "=", "Website Route Medium")]
+                [("name", "=", "Website Form")]
             ),
             1,
         )

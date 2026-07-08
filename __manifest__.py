@@ -10,6 +10,7 @@
         "crm",
         "sales_team",
         "website",
+        "phone_validation",
     ],
     "data": [
         "data/res.region.csv",
