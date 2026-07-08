@@ -1,164 +1,511 @@
 import publicWidget from "@web/legacy/js/public/public_widget";
 
+const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$/;
+const PHONE_PATTERN = /^\+?[0-9\s().-]+$/;
+const PHONE_MIN_DIGITS = 7;
+const PHONE_MAX_DIGITS = 15;
+
+const INQUIRY_MIN_LENGTH = 10;
+const INQUIRY_MAX_LENGTH = 1000;
+
 publicWidget.registry.AbcCrmMultiStepForm = publicWidget.Widget.extend({
-    selector: ".s_abc_crm_multi_step_form",
-    events: {
-        "click .abc-crm-form__next": "_onNextClick",
-        "click .abc-crm-form__back": "_onBackClick",
-        "submit .abc-crm-form": "_onSubmit",
-    },
+  selector: ".s_abc_crm_multi_step_form",
 
-    start() {
-        this.form = this.el.querySelector(".abc-crm-form");
-        this.steps = [...this.el.querySelectorAll(".abc-crm-form__step")];
-        this.currentStep = 0;
-        this._showStep(0);
-        return this._super(...arguments);
-    },
+  events: {
+    "click .abc-crm-form__next": "_onNextClick",
+    "click .abc-crm-form__back": "_onBackClick",
+    "submit .abc-crm-form": "_onSubmit",
 
-    _onNextClick() {
-        if (!this._validateStep(this.currentStep)) {
-            this._showAlert("Please complete the required fields.", "danger");
-            return;
+    "input .abc-crm-form input": "_onFieldChanged",
+    "input .abc-crm-form textarea": "_onFieldChanged",
+    "change .abc-crm-form select": "_onFieldChanged",
+    "change .abc-crm-form input[type='radio']": "_onFieldChanged",
+  },
+
+  start() {
+    this.form = this.el.querySelector(".abc-crm-form");
+
+    this.steps = [...this.el.querySelectorAll(".abc-crm-form__step")];
+
+    this.currentStep = 0;
+    this.isSubmitting = false;
+
+    this.messageInput = this.el.querySelector('[name="message"]');
+
+    this.characterCounter = this.el.querySelector(
+      ".abc-crm-form__character-counter",
+    );
+
+    this.targetCompletionInput = this.el.querySelector(
+      '[name="target_completion_date"]',
+    );
+
+    this._setTargetCompletionMin();
+    this._updateInquiryCounter();
+    this._showStep(0);
+
+    return this._super(...arguments);
+  },
+
+  // =====================================================
+  // Navigation
+  // =====================================================
+
+  _onNextClick() {
+    const validation = this._validateStep(this.currentStep);
+
+    if (!validation.isValid) {
+      this._showAlert(validation.message, "danger");
+
+      this._focusInvalidControl(validation.firstInvalid);
+
+      return;
+    }
+
+    this._hideAlert();
+
+    if (this.currentStep < this.steps.length - 1) {
+      this._showStep(this.currentStep + 1);
+    }
+  },
+
+  _onBackClick() {
+    this._hideAlert();
+
+    if (this.currentStep > 0) {
+      this._showStep(this.currentStep - 1);
+    }
+  },
+
+  // =====================================================
+  // Submit
+  // =====================================================
+
+  async _onSubmit(ev) {
+    ev.preventDefault();
+
+    if (this.isSubmitting) {
+      return;
+    }
+
+    const validation = this._validateAllSteps();
+
+    if (!validation.isValid) {
+      this._showStep(validation.stepIndex);
+
+      this._showAlert(validation.message, "danger");
+
+      this._focusInvalidControl(validation.firstInvalid);
+
+      return;
+    }
+
+    const submitButton = this.el.querySelector(".abc-crm-form__submit");
+
+    const originalButtonText = submitButton.textContent;
+
+    const formData = new FormData(this.form);
+
+    if (window.odoo?.csrf_token && !formData.get("csrf_token")) {
+      formData.append("csrf_token", window.odoo.csrf_token);
+    }
+
+    this.isSubmitting = true;
+
+    submitButton.disabled = true;
+    submitButton.textContent = "Submitting...";
+
+    this._hideAlert();
+
+    try {
+      const response = await fetch(this.form.action, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+
+      const body = await this._readResponse(response);
+
+      if (!response.ok || !body.success) {
+        throw new Error(body.error || "Unable to submit the form.");
+      }
+
+      this.form.reset();
+
+      this._clearValidationState();
+      this._updateInquiryCounter();
+      this._showStep(0);
+
+      this._showAlert("Thank you. Your inquiry has been submitted.", "success");
+    } catch (error) {
+      this._showAlert(
+        error instanceof Error ? error.message : "Unable to submit the form.",
+        "danger",
+      );
+    } finally {
+      this.isSubmitting = false;
+
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
+    }
+  },
+
+  async _readResponse(response) {
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      return response.json();
+    }
+
+    // Consume the response, but don't display raw HTML.
+    await response.text();
+
+    return {
+      success: false,
+      error:
+        `Unable to submit the form. ` + `Server returned ${response.status}.`,
+    };
+  },
+
+  // =====================================================
+  // Validation
+  // =====================================================
+
+  _validateAllSteps() {
+    for (let stepIndex = 0; stepIndex < this.steps.length; stepIndex++) {
+      const result = this._validateStep(stepIndex);
+
+      if (!result.isValid) {
+        return {
+          ...result,
+          stepIndex,
+        };
+      }
+    }
+
+    return {
+      isValid: true,
+    };
+  },
+
+  _validateStep(stepIndex) {
+    const step = this.steps[stepIndex];
+
+    const controls = [
+      ...step.querySelectorAll("input, select, textarea"),
+    ].filter((control) => control.type !== "hidden" && !control.disabled);
+
+    let isValid = true;
+    let message = null;
+    let firstInvalid = null;
+
+    const radioNames = new Set();
+
+    controls.forEach((control) => {
+      control.classList.remove("is-invalid");
+
+      // ---------------------------------------------
+      // Radio groups
+      // ---------------------------------------------
+
+      if (control.type === "radio") {
+        if (radioNames.has(control.name)) {
+          return;
         }
-        this._hideAlert();
-        if (this.currentStep < this.steps.length - 1) {
-            this._showStep(this.currentStep + 1);
-        }
-    },
 
-    _onBackClick() {
-        this._hideAlert();
-        if (this.currentStep > 0) {
-            this._showStep(this.currentStep - 1);
-        }
-    },
+        radioNames.add(control.name);
 
-    async _onSubmit(ev) {
-        ev.preventDefault();
-
-        if (!this._validateStep(this.currentStep)) {
-            this._showAlert("Please complete the required fields.", "danger");
-            return;
+        if (!control.required) {
+          return;
         }
 
-        const submitButton = this.el.querySelector(".abc-crm-form__submit");
-        const formData = new FormData(this.form);
-        if (window.odoo?.csrf_token && !formData.get("csrf_token")) {
-            formData.append("csrf_token", window.odoo.csrf_token);
+        const radios = [
+          ...step.querySelectorAll(
+            `input[type="radio"]` + `[name="${control.name}"]`,
+          ),
+        ];
+
+        const checked = radios.some((radio) => radio.checked);
+
+        if (!checked) {
+          isValid = false;
+
+          message ??= "Please answer all project assessment questions.";
+
+          firstInvalid ??= radios[0];
+
+          radios.forEach((radio) => {
+            radio.classList.add("is-invalid");
+          });
         }
 
-        submitButton.disabled = true;
-        submitButton.textContent = "Submitting...";
-        this._hideAlert();
+        return;
+      }
 
-        try {
-            const response = await fetch(this.form.action, {
-                method: "POST",
-                body: formData,
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest",
-                },
-            });
-            const body = await response.json();
+      const value = control.value.trim();
 
-            if (!response.ok || !body.success) {
-                throw new Error(body.error || "Unable to submit the form.");
-            }
+      // ---------------------------------------------
+      // Required fields
+      // ---------------------------------------------
 
-            this.form.reset();
-            this._showStep(0);
-            this._showAlert("Thank you. Your inquiry has been submitted.", "success");
-        } catch (error) {
-            this._showAlert(error.message, "danger");
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = "Submit";
-        }
-    },
+      if (control.required && !value) {
+        isValid = false;
 
-    _showStep(stepIndex) {
-        this.currentStep = stepIndex;
-        this.steps.forEach((step, index) => {
-            step.classList.toggle("d-none", index !== stepIndex);
+        message ??= "Please complete the required fields.";
+
+        firstInvalid ??= control;
+
+        control.classList.add("is-invalid");
+
+        return;
+      }
+
+      // Optional and empty = valid
+      if (!value) {
+        return;
+      }
+
+      const validationMessage = this._getControlValidationMessage(
+        control,
+        value,
+      );
+
+      if (validationMessage) {
+        isValid = false;
+
+        message ??= validationMessage;
+        firstInvalid ??= control;
+
+        control.classList.add("is-invalid");
+      }
+    });
+
+    return {
+      isValid,
+      message,
+      firstInvalid,
+    };
+  },
+
+  _getControlValidationMessage(control, value) {
+    if (control.name === "message") {
+      const length = value.length;
+
+      if (length < INQUIRY_MIN_LENGTH) {
+        return (
+          `Inquiry must be at least ` + `${INQUIRY_MIN_LENGTH} characters.`
+        );
+      }
+
+      if (length > INQUIRY_MAX_LENGTH) {
+        return `Inquiry cannot exceed ` + `${INQUIRY_MAX_LENGTH} characters.`;
+      }
+    }
+
+    if (control.name === "email_from" && !this._isValidEmailShape(value)) {
+      return "Please enter a valid email address.";
+    }
+
+    if (control.name === "phone" && !this._isValidPhoneShape(value)) {
+      return "Please enter a valid phone or landline number.";
+    }
+
+    if (!control.checkValidity()) {
+      switch (control.name) {
+        case "email_from":
+          return "Please enter a valid email address.";
+
+        case "estimated_project_value":
+          return "Estimated Project Value must be greater than zero.";
+
+        case "target_completion_date":
+          return "Target Completion Date cannot be in the past.";
+
+        default:
+          return "Please check the highlighted fields.";
+      }
+    }
+
+    return null;
+  },
+
+  _isValidEmailShape(value) {
+    return EMAIL_PATTERN.test(value.trim());
+  },
+
+  _isValidPhoneShape(value) {
+    const phone = value.trim();
+
+    if (!PHONE_PATTERN.test(phone)) {
+      return false;
+    }
+
+    const digits = phone.replace(/\D/g, "");
+
+    return (
+      digits.length >= PHONE_MIN_DIGITS && digits.length <= PHONE_MAX_DIGITS
+    );
+  },
+
+  // =====================================================
+  // Field interaction
+  // =====================================================
+
+  _onFieldChanged(ev) {
+    const control = ev.target;
+
+    if (control.type === "radio") {
+      this.form
+        .querySelectorAll(`input[type="radio"]` + `[name="${control.name}"]`)
+        .forEach((radio) => {
+          radio.classList.remove("is-invalid");
         });
+    } else {
+      control.classList.remove("is-invalid");
+    }
 
-        this.el
-            .querySelector(".abc-crm-form__back")
-            .classList.toggle("d-none", stepIndex === 0);
-        this.el
-            .querySelector(".abc-crm-form__next")
-            .classList.toggle("d-none", stepIndex === this.steps.length - 1);
-        this.el
-            .querySelector(".abc-crm-form__submit")
-            .classList.toggle("d-none", stepIndex !== this.steps.length - 1);
+    if (control.name === "message") {
+      this._updateInquiryCounter();
+    }
 
-        const progress = this.el.querySelector(".abc-crm-form__progress-bar");
-        progress.style.width = `${((stepIndex + 1) / this.steps.length) * 100}%`;
+    this._hideAlert();
+  },
 
-        if (stepIndex === this.steps.length - 1) {
-            this._fillReview();
-        }
-    },
+  // =====================================================
+  // Inquiry counter
+  // =====================================================
 
-    _validateStep(stepIndex) {
-        const step = this.steps[stepIndex];
-        const controls = [
-            ...step.querySelectorAll("input, select, textarea"),
-        ].filter((control) => control.type !== "hidden");
+  _updateInquiryCounter() {
+    if (!this.messageInput || !this.characterCounter) {
+      return;
+    }
 
-        let isValid = true;
-        const radioNames = new Set();
+    const length = this.messageInput.value.length;
 
-        controls.forEach((control) => {
-            control.classList.remove("is-invalid");
+    this.characterCounter.textContent = `${length} / ${INQUIRY_MAX_LENGTH}`;
 
-            if (!control.required) {
-                return;
-            }
+    this.characterCounter.classList.toggle(
+      "text-danger",
+      length > 0 && length < INQUIRY_MIN_LENGTH,
+    );
+  },
 
-            if (control.type === "radio") {
-                if (radioNames.has(control.name)) {
-                    return;
-                }
-                radioNames.add(control.name);
-                const checked = step.querySelector(
-                    `input[type="radio"][name="${control.name}"]:checked`
-                );
-                if (!checked) {
-                    isValid = false;
-                    step
-                        .querySelectorAll(`input[type="radio"][name="${control.name}"]`)
-                        .forEach((radio) => radio.classList.add("is-invalid"));
-                }
-                return;
-            }
+  // =====================================================
+  // Date minimum
+  // =====================================================
 
-            if (!control.value.trim()) {
-                isValid = false;
-                control.classList.add("is-invalid");
-            }
-        });
+  _setTargetCompletionMin() {
+    if (!this.targetCompletionInput) {
+      return;
+    }
 
-        return isValid;
-    },
+    const today = new Date();
 
-    _fillReview() {
-        const formData = new FormData(this.form);
-        this.el.querySelectorAll("[data-review]").forEach((node) => {
-            node.textContent = formData.get(node.dataset.review) || "-";
-        });
-    },
+    const year = today.getFullYear();
 
-    _showAlert(message, type) {
-        const alert = this.el.querySelector(".abc-crm-form__alert");
-        alert.className = `abc-crm-form__alert alert alert-${type}`;
-        alert.textContent = message;
-    },
+    const month = String(today.getMonth() + 1).padStart(2, "0");
 
-    _hideAlert() {
-        const alert = this.el.querySelector(".abc-crm-form__alert");
-        alert.className = "abc-crm-form__alert alert d-none";
-        alert.textContent = "";
-    },
+    const day = String(today.getDate()).padStart(2, "0");
+
+    this.targetCompletionInput.min = `${year}-${month}-${day}`;
+  },
+
+  // =====================================================
+  // UI
+  // =====================================================
+
+  _showStep(stepIndex) {
+    this.currentStep = stepIndex;
+
+    this.steps.forEach((step, index) => {
+      step.classList.toggle("d-none", index !== stepIndex);
+    });
+
+    this.el
+      .querySelector(".abc-crm-form__back")
+      .classList.toggle("d-none", stepIndex === 0);
+
+    this.el
+      .querySelector(".abc-crm-form__next")
+      .classList.toggle("d-none", stepIndex === this.steps.length - 1);
+
+    this.el
+      .querySelector(".abc-crm-form__submit")
+      .classList.toggle("d-none", stepIndex !== this.steps.length - 1);
+
+    const progress = this.el.querySelector(".abc-crm-form__progress");
+
+    const progressBar = this.el.querySelector(".abc-crm-form__progress-bar");
+
+    const progressPercentage = ((stepIndex + 1) / this.steps.length) * 100;
+
+    progressBar.style.width = `${progressPercentage}%`;
+
+    progress.setAttribute("aria-valuenow", String(stepIndex + 1));
+
+    if (stepIndex === this.steps.length - 1) {
+      this._fillReview();
+    }
+  },
+
+  _fillReview() {
+    const formData = new FormData(this.form);
+
+    this.el.querySelectorAll("[data-review]").forEach((node) => {
+      let value = formData.get(node.dataset.review) || "-";
+
+      if (value === "yes") {
+        value = "Yes";
+      } else if (value === "no") {
+        value = "No";
+      }
+
+      node.textContent = value;
+    });
+  },
+
+  _focusInvalidControl(control) {
+    if (!control) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      control.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+
+      control.focus({
+        preventScroll: true,
+      });
+    });
+  },
+
+  _clearValidationState() {
+    this.form.querySelectorAll(".is-invalid").forEach((control) => {
+      control.classList.remove("is-invalid");
+    });
+
+    this._hideAlert();
+  },
+
+  _showAlert(message, type) {
+    const alert = this.el.querySelector(".abc-crm-form__alert");
+
+    alert.className = `abc-crm-form__alert ` + `alert alert-${type}`;
+
+    alert.textContent = message;
+
+    alert.setAttribute("role", type === "danger" ? "alert" : "status");
+  },
+
+  _hideAlert() {
+    const alert = this.el.querySelector(".abc-crm-form__alert");
+
+    alert.className = "abc-crm-form__alert alert d-none";
+
+    alert.textContent = "";
+  },
 });
