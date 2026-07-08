@@ -2,10 +2,12 @@
     <data>
         <record id="group_crm_all" model="res.groups">
             <field name="name">CRM: All Documents</field>
+            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman_all_leads'))]"/>
         </record>
 
         <record id="group_crm_own" model="res.groups">
             <field name="name">CRM: Own Documents Only</field>
+            <field name="implied_ids" eval="[(4, ref('sales_team.group_sale_salesman'))]"/>
         </record>
 
         <record id="group_marketing" model="res.groups">
@@ -35,7 +37,7 @@
 
         <record id="crm.crm_menu_root" model="ir.ui.menu">
             <field name="group_ids" eval="[
-                 (6, 0, [
+                (6, 0, [
                     ref('abc_crm.group_crm_own'),
                     ref('abc_crm.group_crm_all'),
                     ref('sales_team.group_sale_manager'),
@@ -127,21 +129,23 @@
         </record>
 
         <record id="board.menu_board_my_dash" model="ir.ui.menu">
-             <field name="group_ids" eval="[
-                (3, ref('abc_crm.group_sales_team_leader')),
-                (3, ref('abc_crm.group_sales_manager')),
-                (3, ref('abc_crm.group_marketing')),
-                (3, ref('abc_crm.group_sales_representative')),
-            ]"/>
+            <field name="group_ids" eval="[
+            (6, 0, [
+                ref('abc_crm.group_sales_team_leader'),
+                ref('abc_crm.group_sales_manager'),
+                ref('abc_crm.group_marketing'),
+                ref('abc_crm.group_sales_representative'),
+            ])]"/>
         </record>
 
         <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
             <field name="group_ids" eval="[
-                (3, ref('abc_crm.group_sales_team_leader')),
-                (3, ref('abc_crm.group_sales_manager')),
-                (3, ref('abc_crm.group_marketing')),
-                (3, ref('abc_crm.group_sales_representative')),
-            ]"/>
+            (6, 0, [
+                ref('abc_crm.group_sales_team_leader'),
+                ref('abc_crm.group_sales_manager'),
+                ref('abc_crm.group_marketing'),
+                ref('abc_crm.group_sales_representative'),
+            ])]"/>
         </record>
 
     </data>
