@@ -66,9 +66,7 @@ class TestAbcCrmLeadController(HttpCase):
             "project_location": "  Cebu City  ",
             "project_type": "  Commercial  ",
             "estimated_project_value": "1250000.50",
-            "target_completion_date": (
-                date.today() + timedelta(days=180)
-            ).isoformat(),
+            "target_completion_date": (date.today() + timedelta(days=180)).isoformat(),
             "company_type": "contractor",
             "is_five_storey_up": "yes",
             "is_ongoing": "0",
@@ -211,15 +209,11 @@ class TestAbcCrmLeadController(HttpCase):
         self.assertEqual(first_lead.campaign_id.name, "Website Route Campaign")
 
         self.assertEqual(
-            self.env["utm.source"].search_count(
-                [("name", "=", "Website")]
-            ),
+            self.env["utm.source"].search_count([("name", "=", "Website")]),
             1,
         )
         self.assertEqual(
-            self.env["utm.medium"].search_count(
-                [("name", "=", "Website Form")]
-            ),
+            self.env["utm.medium"].search_count([("name", "=", "Website Form")]),
             1,
         )
         self.assertEqual(

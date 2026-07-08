@@ -2,7 +2,7 @@
 
 import logging
 
-from odoo import api, models, fields, http
+from odoo import fields, http
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.http import request
 
@@ -223,45 +223,31 @@ class AbcCrmLeadController(http.Controller):
         return lead_model.create(lead_values)
 
     def _validate_payload(self, payload):
-        unknown_fields = sorted(
-            set(payload.keys()) - self.allowed_fields
-        )
+        unknown_fields = sorted(set(payload.keys()) - self.allowed_fields)
 
         if unknown_fields:
-            raise ValidationError(
-                "Unknown field(s): %s"
-                % ", ".join(unknown_fields)
-            )
+            raise ValidationError("Unknown field(s): %s" % ", ".join(unknown_fields))
 
         missing_text_fields = [
             field_name
             for field_name in self.required_text_fields
-            if not self._clean_string(
-                payload.get(field_name)
-            )
+            if not self._clean_string(payload.get(field_name))
         ]
 
         missing_boolean_fields = [
             field_name
-            for field_name
-            in self.required_boolean_fields
+            for field_name in self.required_boolean_fields
             if field_name not in payload
         ]
 
-        missing_fields = (
-            missing_text_fields
-            + missing_boolean_fields
-        )
+        missing_fields = missing_text_fields + missing_boolean_fields
 
         if missing_fields:
             raise ValidationError(
-                "Missing required field(s): %s"
-                % ", ".join(missing_fields)
+                "Missing required field(s): %s" % ", ".join(missing_fields)
             )
 
-        self._validate_message(
-            payload.get("message")
-        )
+        self._validate_message(payload.get("message"))
 
     def _get_or_create_utm(self, model_name, name, sudo=False):
         clean_name = self._clean_string(name)

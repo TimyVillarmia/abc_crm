@@ -1,10 +1,9 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
-from odoo.tools import single_email_re
-
 from odoo.addons.phone_validation.tools.phone_validation import (
     phone_parse,
 )
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import single_email_re
 
 
 class CrmLead(models.Model):
@@ -157,16 +156,10 @@ class CrmLead(models.Model):
             email = (lead.email_from or "").strip()
 
             if not email:
-                raise ValidationError(
-                    _("Email is required.")
-                )
+                raise ValidationError(_("Email is required."))
 
             if not single_email_re.fullmatch(email):
-                raise ValidationError(
-                    _(
-                        "Please enter a valid email address."
-                    )
-                )
+                raise ValidationError(_("Please enter a valid email address."))
 
     @api.depends(
         "is_five_storey_up",
@@ -205,17 +198,12 @@ class CrmLead(models.Model):
 
         return super().action_set_lost(**kwargs)
 
-    
     @api.constrains("estimated_project_value")
     def _check_estimated_project_value(self):
         for lead in self:
             if lead.estimated_project_value < 0:
-                raise ValidationError(
-                    _(
-                        "Estimated Project Value cannot be negative."
-                    )
-                )
-        
+                raise ValidationError(_("Estimated Project Value cannot be negative."))
+
     @api.constrains("target_completion_date")
     def _check_target_completion_date(self):
         for lead in self:
@@ -226,12 +214,9 @@ class CrmLead(models.Model):
 
             if lead.target_completion_date < today:
                 raise ValidationError(
-                    _(
-                        "Target Completion Date cannot "
-                        "be in the past."
-                    )
+                    _("Target Completion Date cannot be in the past.")
                 )
-    
+
     @api.constrains("phone", "country_id")
     def _check_phone(self):
         for lead in self:
@@ -240,20 +225,13 @@ class CrmLead(models.Model):
             if not phone:
                 continue
 
-            country_code = (
-                lead.country_id.code
-                if lead.country_id
-                else "PH"
-            )
+            country_code = lead.country_id.code if lead.country_id else "PH"
 
             try:
                 phone_parse(phone, country_code)
             except UserError as exc:
                 raise ValidationError(
-                    _(
-                        "Please enter a valid phone or "
-                        "landline number."
-                    )
+                    _("Please enter a valid phone or landline number.")
                 ) from exc
 
     def convert_opportunity(self, partner=False, user_ids=False, team_id=False):
