@@ -36,6 +36,7 @@ The addon extends `crm.lead` with project qualification fields, lead rating, aut
 │       └── scss/
 │           └── abc_crm_multi_step_form.scss
 ├── tests/
+│   ├── test_crm_lead.py
 │   └── test_lead_controller.py
 └── views/
     ├── crm_lead_views.xml
@@ -172,10 +173,10 @@ The pre-commit configuration checks whitespace, EOF, YAML, TOML, XML, large file
 Run all Odoo tests in a fresh database:
 
 ```bash
-docker compose up -d db
-docker compose exec db dropdb -U admin --if-exists abc_crm_test
+rtk docker compose up -d db
+rtk docker compose exec db dropdb -U admin --if-exists abc_crm_test
 
-docker compose run --rm web odoo \
+rtk docker compose run --rm web odoo \
   -d abc_crm_test \
   --init abc_crm \
   --test-enable \
@@ -187,7 +188,7 @@ docker compose run --rm web odoo \
 Run only the lead controller test class:
 
 ```bash
-docker compose run --rm web odoo \
+rtk docker compose run --rm web odoo \
   -d abc_crm_test \
   --update abc_crm \
   --test-enable \
@@ -196,14 +197,35 @@ docker compose run --rm web odoo \
   --log-level=test
 ```
 
+Run only the CRM lead model test class:
+
+```bash
+rtk docker compose run --rm web odoo \
+  -d abc_crm_test \
+  --update abc_crm \
+  --test-enable \
+  --test-tags=/abc_crm:TestCrmLead \
+  --stop-after-init \
+  --log-level=test
+```
+
+`tests/test_crm_lead.py` uses `TransactionCase` and verifies:
+
+- Rating calculation from the six qualification fields.
+- Qualified lead conversion to an unassigned opportunity.
+- Unqualified lead lost disposition with `abc_crm.lost_reason_unqualified`.
+- `project_location` computation from address, region, zip, and country.
+- Model constraints for required/valid email, non-negative project value, non-past target date, and valid phone numbers.
+
 `tests/test_lead_controller.py` uses `HttpCase`, generates an API key for `base.user_admin`, and verifies:
 
 - Successful `POST /abc_crm/lead` lead creation.
 - Text trimming for payload values.
+- `function` mapping to the lead position/job title field.
 - `message` mapping to lead `name` and HTML `description`.
 - `project_location` mapping through `street` and the computed `project_location`.
-- Float, date, and boolean parsing.
-- UTM source, medium, and campaign creation/reuse.
+- Float, future date, Philippine phone, and boolean parsing.
+- UTM source, medium, and campaign creation/defaulting/reuse.
 - Rating value `65` for the sample valid payload.
 - `400` responses for missing fields, unknown fields, invalid `company_type`, invalid booleans, invalid project value, and invalid date format.
 
@@ -307,8 +329,9 @@ Example payload:
 {
   "contact_name": "Jane Buyer",
   "partner_name": "ABC Construction",
+  "function": "Purchasing Manager",
   "email_from": "jane@example.com",
-  "phone": "+63 900 000 0000",
+  "phone": "+639170000000",
   "message": "Website inquiry",
   "project_name": "Warehouse Extension",
   "project_location": "Cebu City",
@@ -332,6 +355,7 @@ Required text fields:
 
 - `contact_name`
 - `partner_name`
+- `function`
 - `email_from`
 - `phone`
 - `message`
@@ -393,10 +417,13 @@ The website route is public, uses Odoo CSRF protection, and submits form-encoded
 - `csrf_token`: Odoo CSRF token.
 - `abc_crm_hp`: honeypot field; non-empty values return success without creating a lead.
 
-The snippet sets these hidden UTM defaults:
+The website route sets these UTM defaults for public form submissions:
 
 - `utm_source = Website`
 - `utm_medium = Website Form`
+
+The snippet also sends this campaign default unless the form payload is changed:
+
 - `utm_campaign = Website Inquiry`
 
 The JavaScript widget handles step navigation, required-field validation, review summary rendering, AJAX submission, and success/error alerts.

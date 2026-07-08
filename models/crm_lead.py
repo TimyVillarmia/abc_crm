@@ -1,8 +1,13 @@
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.addons.phone_validation.tools.phone_validation import (
+    phone_parse,
+)
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import single_email_re
 
 
 class CrmLead(models.Model):
-    _inherit = ["crm.lead"]
+    _inherit = "crm.lead"
 
     project_name = fields.Char("Project Name")
     project_location = fields.Char(
@@ -145,6 +150,17 @@ class CrmLead(models.Model):
             ]
             lead.project_location = ", ".join(filter(None, parts))
 
+    @api.constrains("email_from")
+    def _check_email_from(self):
+        for lead in self:
+            email = (lead.email_from or "").strip()
+
+            if not email:
+                raise ValidationError(_("Email is required."))
+
+            if not single_email_re.fullmatch(email):
+                raise ValidationError(_("Please enter a valid email address."))
+
     @api.depends(
         "is_five_storey_up",
         "is_ongoing",
@@ -181,6 +197,42 @@ class CrmLead(models.Model):
                 kwargs["lost_reason_id"] = unqualified_reason.id
 
         return super().action_set_lost(**kwargs)
+
+    @api.constrains("estimated_project_value")
+    def _check_estimated_project_value(self):
+        for lead in self:
+            if lead.estimated_project_value < 0:
+                raise ValidationError(_("Estimated Project Value cannot be negative."))
+
+    @api.constrains("target_completion_date")
+    def _check_target_completion_date(self):
+        for lead in self:
+            if not lead.target_completion_date:
+                continue
+
+            today = fields.Date.context_today(lead)
+
+            if lead.target_completion_date < today:
+                raise ValidationError(
+                    _("Target Completion Date cannot be in the past.")
+                )
+
+    @api.constrains("phone", "country_id")
+    def _check_phone(self):
+        for lead in self:
+            phone = (lead.phone or "").strip()
+
+            if not phone:
+                continue
+
+            country_code = lead.country_id.code if lead.country_id else "PH"
+
+            try:
+                phone_parse(phone, country_code)
+            except UserError as exc:
+                raise ValidationError(
+                    _("Please enter a valid phone or landline number.")
+                ) from exc
 
     def convert_opportunity(self, partner=False, user_ids=False, team_id=False):
         result = super().convert_opportunity(

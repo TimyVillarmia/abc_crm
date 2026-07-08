@@ -16,6 +16,7 @@ class AbcCrmLeadController(http.Controller):
         "partner_name",
         "email_from",
         "phone",
+        "function",
         # Main inquiry field
         "message",
         # Project fields
@@ -48,6 +49,7 @@ class AbcCrmLeadController(http.Controller):
         "project_location",
         "project_type",
         "company_type",
+        "function",
         "utm_source",
         "utm_medium",
     ]
@@ -127,6 +129,13 @@ class AbcCrmLeadController(http.Controller):
             if field_name in kwargs
         }
 
+        payload.update(
+            {
+                "utm_source": "Website",
+                "utm_medium": "Website Form",
+            }
+        )
+
         try:
             lead = self._create_lead_from_payload(payload, sudo=True)
         except (ValidationError, UserError) as error:
@@ -179,6 +188,7 @@ class AbcCrmLeadController(http.Controller):
             "partner_name": self._clean_string(payload.get("partner_name")),
             "email_from": self._clean_string(payload.get("email_from")),
             "phone": self._clean_string(payload.get("phone")),
+            "function": self._clean_string(payload.get("function")),
             # Project fields
             "project_name": self._clean_string(payload.get("project_name")),
             "project_type": self._clean_string(payload.get("project_type")),
@@ -214,6 +224,7 @@ class AbcCrmLeadController(http.Controller):
 
     def _validate_payload(self, payload):
         unknown_fields = sorted(set(payload.keys()) - self.allowed_fields)
+
         if unknown_fields:
             raise ValidationError("Unknown field(s): %s" % ", ".join(unknown_fields))
 
@@ -230,10 +241,13 @@ class AbcCrmLeadController(http.Controller):
         ]
 
         missing_fields = missing_text_fields + missing_boolean_fields
+
         if missing_fields:
             raise ValidationError(
                 "Missing required field(s): %s" % ", ".join(missing_fields)
             )
+
+        self._validate_message(payload.get("message"))
 
     def _get_or_create_utm(self, model_name, name, sudo=False):
         clean_name = self._clean_string(name)
@@ -290,6 +304,15 @@ class AbcCrmLeadController(http.Controller):
 
         raise ValidationError("Invalid boolean value: %s" % value)
 
+    def _validate_message(self, value):
+        message = self._clean_string(value)
+
+        if len(message) < 10:
+            raise ValidationError("Inquiry must be at least 10 characters.")
+
+        if len(message) > 1000:
+            raise ValidationError("Inquiry cannot exceed 1000 characters.")
+
     def _parse_float(self, value):
         clean_value = self._clean_string(value)
 
@@ -332,6 +355,7 @@ class AbcCrmLeadController(http.Controller):
             "project_name": lead.project_name,
             "project_location": lead.project_location,
             "project_type": lead.project_type,
+            "function": lead.function,
             "estimated_project_value": lead.estimated_project_value,
             "target_completion_date": (
                 lead.target_completion_date.isoformat()
