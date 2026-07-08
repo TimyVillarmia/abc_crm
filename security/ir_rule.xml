@@ -1,38 +1,54 @@
 <odoo>
     <data>
-        <record id="abc_crm_lead_rule_rep_own_only" model="ir.rule">
-            <field name="name">CRM: Own Leads Only</field>
+        <record id="abc_crm_lead_rule_own" model="ir.rule">
+            <field name="name">CRM: Own Leads</field>
             <field name="model_id" ref="crm.model_crm_lead"/>
             <field name="domain_force">[('user_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('abc_crm.group_crm_own'))]"/>
         </record>
+        <record id="abc_crm_lead_rule_all" model="ir.rule">
+            <field name="name">CRM: All Leads</field>
+            <field name="model_id" ref="crm.model_crm_lead"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('abc_crm.group_crm_all'))]"/>
+        </record>
 
-        <record id="abc_crm_team_member_rule_rep_own_only" model="ir.rule">
-            <field name="name">Sales Team: Own Membership Only</field>
+        <record id="abc_crm_team_member_rule_own_only" model="ir.rule">
+            <field name="name">Sales Team: Own Members Only</field>
             <field name="model_id" ref="sales_team.model_crm_team_member"/>
             <field name="domain_force">[('user_id', 'in', user.sale_team_id.member_ids.ids)]</field>
             <field name="groups" eval="[(4, ref('abc_crm.group_sales_representative'))]"/>
         </record>
 
-        <record id="abc_crm_lead_rule_leader_own_only" model="ir.rule">
+        <record id="abc_crm_team_member_rule_all_only" model="ir.rule">
+            <field name="name">Sales Team: All Members</field>
+            <field name="model_id" ref="sales_team.model_crm_team_member"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('abc_crm.group_crm_all'))]"/>
+        </record>
+
+        <record id="abc_crm_lead_rule_own_only" model="ir.rule">
             <field name="name">CRM: Own Team Leads Only</field>
             <field name="model_id" ref="crm.model_crm_lead"/>
             <field name="domain_force">[('team_id.user_id', '=', user.id)]</field>
             <field name="groups" eval="[(4, ref('abc_crm.group_crm_own'))]"/>
         </record>
 
-        <record id="abc_crm_team_rule_leader_own_only" model="ir.rule">
+        <record id="abc_crm_team_rule_all" model="ir.rule">
+            <field name="name">Sales Team: All Teams</field>
+            <field name="model_id" ref="sales_team.model_crm_team"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+            <field name="groups" eval="[(4, ref('abc_crm.group_crm_all'))]"/>
+        </record>
+
+        <record id="abc_crm_team_rule_own_only" model="ir.rule">
             <field name="name">Sales Team: Own Teams Only</field>
             <field name="model_id" ref="sales_team.model_crm_team"/>
             <field name="domain_force">[('user_id', '=', user.id)]</field>
-            <field name="groups" eval="[
-                (4, ref('abc_crm.group_sales_team_leader')),
-                (4, ref('abc_crm.group_sales_representative')),
-                ]"
-            />
+            <field name="groups" eval="[(4, ref('abc_crm.group_crm_own'))]"/>
         </record>
 
-        <record id="abc_crm_team_member_rule_leader_own_only" model="ir.rule">
+        <record id="abc_crm_team_member_rule_own_only" model="ir.rule">
             <field name="name">Sales Team Member: Own Team Members Only</field>
             <field name="model_id" ref="sales_team.model_crm_team_member"/>
             <field name="domain_force">[('crm_team_id.user_id', '=', user.id)]</field>

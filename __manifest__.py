@@ -7,6 +7,8 @@
         "base",
         "spreadsheet_dashboard",
         "board",
+        "sale_crm",
+        "partnership",
         "crm",
         "sales_team",
         "website",
