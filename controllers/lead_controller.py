@@ -252,10 +252,12 @@ class AbcCrmLeadController(http.Controller):
         self._validate_message(payload.get("message"))
 
     def _validate_email(self, email):
-        if not self._clean_string(email):
+        clean_email = self._clean_string(email)
+
+        if not clean_email:
             raise ValidationError(_("Email is required."))
 
-        if not single_email_re.fullmatch(email):
+        if not single_email_re.fullmatch(clean_email):
             raise ValidationError(_("Please enter a valid email address."))
 
     def _get_or_create_utm(self, model_name, name, sudo=False):
