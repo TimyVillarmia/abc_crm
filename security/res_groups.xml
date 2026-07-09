@@ -103,7 +103,7 @@
             ]"/>
         </record>
 
-        
+
         <record id="partnership.menu_res_partner_grade_action" model="ir.ui.menu">
            <field name="group_ids" eval="[
                 (3, ref('abc_crm.group_general_manager')),

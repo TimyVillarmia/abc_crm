@@ -2,7 +2,7 @@
 
 import logging
 
-from odoo import fields, http
+from odoo import _, fields, http
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.http import request
 from odoo.tools import single_email_re

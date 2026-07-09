@@ -149,7 +149,6 @@ class CrmLead(models.Model):
             ]
             lead.project_location = ", ".join(filter(None, parts))
 
-
     @api.depends(
         "is_five_storey_up",
         "is_ongoing",
