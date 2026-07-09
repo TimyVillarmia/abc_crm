@@ -139,16 +139,15 @@
         </field>
     </record>
 
-    <record id="view_crm_lead_kanban" model="ir.ui.view">
-        <field name="name">crm.lead.kanban</field>
+    <record id="abc_crm_kanban_restrict_user_id" model="ir.ui.view">
+        <field name="name">crm.lead.kanban.restrict.user_id</field>
         <field name="model">crm.lead</field>
-        <field name="inherit_id" ref="crm.crm_lead_view_form" />
+        <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
-            <xpath expr="(//field[@name='user_id'])" position="attributes">
-                <attribute name="invisible">is_allowed</attribute>
+            <xpath expr="//field[@name='user_id'][@widget='many2one_avatar_user']" position="attributes">
+                <attribute name="groups">abc_crm.group_sales_manager,abc_crm.group_general_manager,abc_crm.group_sales_team_leader,sales_team.group_sale_manager</attribute>
+                <attribute name="invisible">not team_id</attribute>
             </xpath>
-        
         </field>
-
-    </record>
+</record>
 </odoo>
