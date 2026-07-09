@@ -35,9 +35,9 @@
             <xpath expr="//page[@name='internal_notes']" position="before">
                 <page string="Qualification Sheet">
                     <group string="Qualification Sheet" col="1">
-                        <group col="1">
+                        <group col="1" >
                             <div class="mt16">
-                                <table class="table w-100 table-bordered ">
+                                <table class="table w-100 table-bordered"  >
                                     <thead>
                                         <tr>
                                             <th style="width: 30%;">Criteria</th>
@@ -51,7 +51,7 @@
                                             <td>is Five Storey Up</td>
                                             <td>Project is 5 storey and above</td>
                                             <td class="text-center">
-                                                <field nolabel="1" name="is_five_storey_up" />
+                                                <field nolabel="1" name="is_five_storey_up" readonly="won_status == 'lost' or not active"/>
                                             </td>
                                             <td class="text-center">15</td>
                                         </tr>
@@ -59,7 +59,7 @@
                                             <td>is Ongoing</td>
                                             <td>Project is undergoing construction</td>
                                             <td class="text-center">
-                                                <field nolabel="1" name="is_ongoing" />
+                                                <field nolabel="1" name="is_ongoing" readonly="won_status == 'lost' or not active"/>
                                             </td>
                                             <td class="text-center">25</td>
                                         </tr>
@@ -68,7 +68,7 @@
                                             <td>Client is open to innovative products like
                                                 lightstrong</td>
                                             <td class="text-center">
-                                                <field nolabel="1" name="is_open" />
+                                                <field nolabel="1" name="is_open" readonly="won_status == 'lost' or not active"/>
                                             </td>
                                             <td class="text-center">10</td>
                                         </tr>
@@ -76,7 +76,7 @@
                                             <td>is AAC user</td>
                                             <td>Client is an AAC user</td>
                                             <td class="text-center">
-                                                <field nolabel="1" name="is_aac_user" />
+                                                <field nolabel="1" name="is_aac_user" readonly="won_status == 'lost' or not active"/>
                                             </td>
                                             <td class="text-center">10</td>
                                         </tr>
@@ -86,7 +86,7 @@
                                                 structural load reduction, or sustainable building
                                                 systems</td>
                                             <td class="text-center">
-                                                <field nolabel="1" name="has_aac_needs" />
+                                                <field nolabel="1" name="has_aac_needs" readonly="won_status == 'lost' or not active"/>
                                             </td>
                                             <td class="text-center">15</td>
                                         </tr>
@@ -95,7 +95,7 @@
                                             <td>Project plan is written in specifications/plans by
                                                 Designer</td>
                                             <td class="text-center">
-                                                <field nolabel="1" name="has_design_specifications" />
+                                                <field nolabel="1" name="has_design_specifications" readonly="won_status == 'lost' or not active"/>
                                             </td>
                                             <td class="text-center">25</td>
                                         </tr>
