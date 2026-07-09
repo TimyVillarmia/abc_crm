@@ -9,6 +9,7 @@
                 <field name="region_id" placeholder="Region" />
             </field>
             <field name="team_id" position="after">
+                <field name="allowed_user_ids" invisible="1"/>
                 <field name="is_restricted" invisible="1"/>
             </field>
             <xpath expr="(//field[@name='user_id'])[1]" position="before">
@@ -18,6 +19,7 @@
                 <attribute name="invisible">type != 'opportunity'</attribute>
             </xpath>
             <xpath expr="(//field[@name='user_id'])[1]" position="attributes">
+                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
                 <attribute name="readonly">is_restricted or not team_id</attribute>
             </xpath>
 
@@ -26,6 +28,7 @@
             </xpath>
 
             <xpath expr="(//field[@name='team_id'])[2]" position="attributes">
+                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
                 <attribute name="invisible">type != 'opportunity'</attribute>
                 <attribute name="readonly">is_restricted</attribute>
             </xpath>
@@ -145,6 +148,7 @@
         <field name="inherit_id" ref="crm.crm_case_kanban_view_leads"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='user_id'][@widget='many2one_avatar_user']" position="attributes">
+                <attribute name="domain">[('id', 'in', allowed_user_ids)]</attribute>
                 <attribute name="groups">abc_crm.group_sales_manager,abc_crm.group_general_manager,abc_crm.group_sales_team_leader,sales_team.group_sale_manager</attribute>
                 <attribute name="invisible">not team_id</attribute>
             </xpath>
