@@ -107,17 +107,6 @@ class TestCrmLead(TransactionCase):
             "Block 1, Lot 2, Cebu City, Visayas, 6000, Philippines",
         )
 
-    def test_email_is_required(self):
-        with self.assertRaisesRegex(ValidationError, "Email is required."):
-            self._create_lead(email_from=False)
-
-    def test_email_must_be_valid(self):
-        with self.assertRaisesRegex(
-            ValidationError,
-            "Please enter a valid email address.",
-        ):
-            self._create_lead(email_from="not-an-email")
-
     def test_estimated_project_value_cannot_be_negative(self):
         with self.assertRaisesRegex(
             ValidationError,

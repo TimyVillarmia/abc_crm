@@ -3,7 +3,6 @@ from odoo.addons.phone_validation.tools.phone_validation import (
     phone_parse,
 )
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools import single_email_re
 
 
 class CrmLead(models.Model):
@@ -149,17 +148,6 @@ class CrmLead(models.Model):
                 lead.country_id.name if lead.country_id else False,
             ]
             lead.project_location = ", ".join(filter(None, parts))
-
-    @api.constrains("email_from")
-    def _check_email_from(self):
-        for lead in self:
-            email = (lead.email_from or "").strip()
-
-            if not email:
-                raise ValidationError(_("Email is required."))
-
-            if not single_email_re.fullmatch(email):
-                raise ValidationError(_("Please enter a valid email address."))
 
     @api.depends(
         "is_five_storey_up",
