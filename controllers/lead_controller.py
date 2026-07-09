@@ -5,6 +5,7 @@ import logging
 from odoo import fields, http
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.http import request
+from odoo.tools import single_email_re
 
 _logger = logging.getLogger(__name__)
 
@@ -247,7 +248,15 @@ class AbcCrmLeadController(http.Controller):
                 "Missing required field(s): %s" % ", ".join(missing_fields)
             )
 
+        self._validate_email(payload.get("email_from"))
         self._validate_message(payload.get("message"))
+
+    def _validate_email(self, email):
+        if not self._clean_string(email):
+            raise ValidationError(_("Email is required."))
+
+        if not single_email_re.fullmatch(email):
+            raise ValidationError(_("Please enter a valid email address."))
 
     def _get_or_create_utm(self, model_name, name, sudo=False):
         clean_name = self._clean_string(name)
@@ -292,7 +301,13 @@ class AbcCrmLeadController(http.Controller):
             return value
 
         if isinstance(value, int):
-            return bool(value)
+            if value == 1:
+                return True
+
+            if value == 0:
+                return False
+
+            raise ValidationError("Invalid boolean value: %s" % value)
 
         clean_value = self._clean_string(value).lower()
 
