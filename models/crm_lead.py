@@ -119,10 +119,10 @@ class CrmLead(models.Model):
         changed = self.filtered(lambda lead: lead.rating != rating_before[lead.id])
 
         qualified = changed.filtered(
-            lambda lead: lead.type == "lead" and lead.rating >= threshold
+            lambda lead: lead.type in ("lead", "opportunity") and lead.rating >= threshold
         )
         unqualified = changed.filtered(
-            lambda lead: lead.type == "lead" and lead.rating < threshold
+            lambda lead: lead.type in ("lead", "opportunity") and lead.rating < threshold
         )
 
         if qualified:
