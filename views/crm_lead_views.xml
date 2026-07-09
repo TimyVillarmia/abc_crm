@@ -138,4 +138,17 @@
             </xpath>
         </field>
     </record>
+
+    <record id="view_crm_lead_kanban" model="ir.ui.view">
+        <field name="name">crm.lead.kanban</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="(//field[@name='user_id'])" position="attributes">
+                <attribute name="invisible">is_allowed</attribute>
+            </xpath>
+        
+        </field>
+
+    </record>
 </odoo>
