@@ -5,3 +5,4 @@ access_crm_team_member_manager,abc.crm.team.member.manager,sales_team.model_crm_
 access_crm_team_member_leader,abc.crm.team.member.leader,sales_team.model_crm_team_member,abc_crm.group_sales_team_leader,1,1,1,0
 access_crm_team_leader,abc.crm.team.leader,sales_team.model_crm_team,abc_crm.group_sales_team_leader,1,1,1,0
 access_crm_team_representative,abc.crm.sales.representative,sales_team.model_crm_team,abc_crm.group_sales_representative,1,0,0,0
+access_sales_order_representative,sales.order.sales.representative,sale_crm.model_sale_order,abc_crm.group_sales_representative,1,1,1,0
