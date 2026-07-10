@@ -12,6 +12,12 @@
                 <field name="allowed_user_ids" invisible="1"/>
                 <field name="is_restricted" invisible="1"/>
             </field>
+            <xpath expr="//button[@name='%(crm.action_crm_lead2opportunity_partner)d']"
+                position="attributes">
+                <attribute name="invisible">
+                    type == 'opportunity' or not active or is_restricted or not can_convert
+                </attribute>
+            </xpath>
             <xpath expr="(//field[@name='user_id'])[1]" position="before">
                 <field name="team_id"/>
             </xpath>
