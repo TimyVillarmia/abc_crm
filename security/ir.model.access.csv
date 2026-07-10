@@ -1,7 +1,8 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_res_region,res.region.crm.user,model_res_region,base.group_user,1,0,0,0
-access_crm_team_manager,abc.crm.team.manager,sales_team.model_crm_team,abc_crm.group_sales_manager,1,1,1,0
+access_crm_team_manager,abc.crm.team.manager,sales_team.model_crm_team,abc_crm.group_sales_manager,1,1,1,1
 access_crm_team_member_manager,abc.crm.team.member.manager,sales_team.model_crm_team_member,abc_crm.group_sales_manager,1,1,1,0
+access_crm_team_member_gen_manager,abc.crm.team.member.gen.manager,sales_team.model_crm_team_member,abc_crm.group_sales_manager,1,1,1,1
 access_crm_team_member_leader,abc.crm.team.member.leader,sales_team.model_crm_team_member,abc_crm.group_sales_team_leader,1,1,1,0
 access_crm_team_leader,abc.crm.team.leader,sales_team.model_crm_team,abc_crm.group_sales_team_leader,1,1,1,0
 access_crm_team_representative,abc.crm.sales.representative,sales_team.model_crm_team,abc_crm.group_sales_representative,1,0,0,0
