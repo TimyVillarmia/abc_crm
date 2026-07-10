@@ -69,7 +69,6 @@
                 (4, ref('abc_crm.group_general_manager')),
                 (4, ref('abc_crm.group_sales_manager')),
                 (4, ref('abc_crm.group_sales_team_leader')),
-                (4, ref('abc_crm.group_sales_representative')),
                 (4, ref('abc_crm.group_marketing')),
             ]"/>
         </record>
@@ -79,7 +78,6 @@
                 (4, ref('abc_crm.group_general_manager')),
                 (4, ref('abc_crm.group_sales_manager')),
                 (4, ref('abc_crm.group_sales_team_leader')),
-                (4, ref('abc_crm.group_sales_representative')),
                 (4, ref('abc_crm.group_marketing')),
             ]"/>
         </record>
