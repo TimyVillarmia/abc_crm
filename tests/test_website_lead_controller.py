@@ -148,9 +148,7 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
                 self.assertFalse(body["success"])
 
     def test_unknown_fields_are_rejected(self):
-        body = self._assert_rejected_without_lead(
-            self._valid_payload(is_admin="true")
-        )
+        body = self._assert_rejected_without_lead(self._valid_payload(is_admin="true"))
 
         self.assertEqual(
             body,

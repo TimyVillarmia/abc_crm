@@ -7,19 +7,23 @@ class TestAbcCrmWebsiteLeadBrowser(HttpCase):
     def setUpClass(cls):
         super().setUpClass()
         website = cls.env["website"].search([], limit=1)
-        view = cls.env["ir.ui.view"].sudo().create(
-            {
-                "name": "ABC CRM Security Test Page",
-                "type": "qweb",
-                "key": "abc_crm.security_test_page",
-                "arch_db": """
+        view = (
+            cls.env["ir.ui.view"]
+            .sudo()
+            .create(
+                {
+                    "name": "ABC CRM Security Test Page",
+                    "type": "qweb",
+                    "key": "abc_crm.security_test_page",
+                    "arch_db": """
                     <t name="ABC CRM Security Test Page">
                         <t t-call="website.layout">
                             <t t-call="abc_crm.s_abc_crm_multi_step_form"/>
                         </t>
                     </t>
                 """,
-            }
+                }
+            )
         )
         cls.env["website.page"].sudo().create(
             {
