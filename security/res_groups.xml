@@ -66,22 +66,22 @@
 
         <record id="board.menu_board_my_dash" model="ir.ui.menu">
             <field name="group_ids" eval="[
-            (6, 0, [
-                ref('abc_crm.group_sales_team_leader'),
-                ref('abc_crm.group_sales_manager'),
-                ref('abc_crm.group_marketing'),
-                ref('abc_crm.group_sales_representative'),
-            ])]"/>
+                (4, ref('abc_crm.group_general_manager')),
+                (4, ref('abc_crm.group_sales_manager')),
+                (4, ref('abc_crm.group_sales_team_leader')),
+                (4, ref('abc_crm.group_sales_representative')),
+                (4, ref('abc_crm.group_marketing')),
+            ]"/>
         </record>
 
         <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
             <field name="group_ids" eval="[
-            (6, 0, [
-                ref('abc_crm.group_sales_team_leader'),
-                ref('abc_crm.group_sales_manager'),
-                ref('abc_crm.group_marketing'),
-                ref('abc_crm.group_sales_representative'),
-            ])]"/>
+                (4, ref('abc_crm.group_general_manager')),
+                (4, ref('abc_crm.group_sales_manager')),
+                (4, ref('abc_crm.group_sales_team_leader')),
+                (4, ref('abc_crm.group_sales_representative')),
+                (4, ref('abc_crm.group_marketing')),
+            ]"/>
         </record>
 
     </data>
