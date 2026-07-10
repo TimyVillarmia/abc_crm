@@ -1,16 +1,13 @@
 import publicWidget from "@web/legacy/js/public/public_widget";
 
 const EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,63}$/;
-const PHONE_PATTERN = /^\+?[0-9\s().-]+$/;
-
-const PHONE_MIN_DIGITS = 7;
-const PHONE_MAX_DIGITS = 15;
 
 const INQUIRY_MIN_LENGTH = 10;
 const INQUIRY_MAX_LENGTH = 1000;
 
 const REQUEST_TIMEOUT_MS = 15_000;
 const MAX_SERVER_ERROR_LENGTH = 300;
+const PHONE_VALIDATION_URL = "/abc_crm/website/phone/validate";
 
 publicWidget.registry.AbcCrmMultiStepForm = publicWidget.Widget.extend({
   selector: ".s_abc_crm_multi_step_form",
@@ -36,6 +33,7 @@ publicWidget.registry.AbcCrmMultiStepForm = publicWidget.Widget.extend({
     this.steps = [...this.el.querySelectorAll(".abc-crm-form__step")];
     this.currentStep = 0;
     this.isSubmitting = false;
+    this.isValidatingPhone = false;
 
     this.messageInput = this.form.querySelector('[name="message"]');
     this.characterCounter = this.el.querySelector(
@@ -56,13 +54,27 @@ publicWidget.registry.AbcCrmMultiStepForm = publicWidget.Widget.extend({
   // Navigation
   // =====================================================
 
-  _onNextClick() {
+  async _onNextClick() {
+    if (this.isValidatingPhone) {
+      return;
+    }
+
     const validation = this._validateStep(this.currentStep);
 
     if (!validation.isValid) {
       this._showAlert(validation.message, "danger");
       this._focusInvalidControl(validation.firstInvalid);
       return;
+    }
+
+    if (this.currentStep === 0) {
+      const phoneValidation = await this._validatePhoneOnServer();
+
+      if (!phoneValidation.isValid) {
+        this._showAlert(phoneValidation.message, "danger");
+        this._focusInvalidControl(phoneValidation.control);
+        return;
+      }
     }
 
     this._hideAlert();
@@ -269,6 +281,76 @@ publicWidget.registry.AbcCrmMultiStepForm = publicWidget.Widget.extend({
     return error || null;
   },
 
+  async _validatePhoneOnServer() {
+    const phoneInput = this.form.querySelector('[name="phone"]');
+
+    if (!phoneInput) {
+      return {
+        isValid: false,
+        message: "The phone field could not be validated.",
+        control: null,
+      };
+    }
+
+    const abortController = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      abortController.abort();
+    }, REQUEST_TIMEOUT_MS);
+
+    this.isValidatingPhone = true;
+
+    try {
+      const csrfToken = this._getCurrentCsrfToken();
+      const formData = new FormData();
+      formData.set("csrf_token", csrfToken);
+      formData.set("phone", phoneInput.value.trim());
+
+      const response = await fetch(PHONE_VALIDATION_URL, {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+        cache: "no-store",
+        redirect: "error",
+        referrerPolicy: "same-origin",
+        signal: abortController.signal,
+        headers: {
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      });
+      const body = await this._readResponse(response);
+
+      if (response.ok && body.valid === true) {
+        return { isValid: true };
+      }
+
+      if (response.ok && body.valid === false) {
+        phoneInput.classList.add("is-invalid");
+        return {
+          isValid: false,
+          message:
+            this._getSafeServerError(body) ||
+            "Please enter a valid phone or landline number.",
+          control: phoneInput,
+        };
+      }
+
+      throw new Error("Unable to validate the phone number.");
+    } catch (error) {
+      return {
+        isValid: false,
+        message:
+          error instanceof DOMException && error.name === "AbortError"
+            ? "Phone validation timed out. Please try again."
+            : "Unable to validate the phone number. Please try again.",
+        control: phoneInput,
+      };
+    } finally {
+      window.clearTimeout(timeoutId);
+      this.isValidatingPhone = false;
+    }
+  },
+
   // =====================================================
   // Validation
   // =====================================================
@@ -400,10 +482,6 @@ publicWidget.registry.AbcCrmMultiStepForm = publicWidget.Widget.extend({
       return "Please enter a valid email address.";
     }
 
-    if (control.name === "phone" && !this._isValidPhoneShape(value)) {
-      return "Please enter a valid phone or landline number.";
-    }
-
     if (!control.checkValidity()) {
       switch (control.name) {
         case "email_from":
@@ -425,20 +503,6 @@ publicWidget.registry.AbcCrmMultiStepForm = publicWidget.Widget.extend({
 
   _isValidEmailShape(value) {
     return EMAIL_PATTERN.test(value.trim());
-  },
-
-  _isValidPhoneShape(value) {
-    const phone = value.trim();
-
-    if (!PHONE_PATTERN.test(phone)) {
-      return false;
-    }
-
-    const digits = phone.replace(/\D/g, "");
-
-    return (
-      digits.length >= PHONE_MIN_DIGITS && digits.length <= PHONE_MAX_DIGITS
-    );
   },
 
   // =====================================================
