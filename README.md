@@ -2,7 +2,9 @@
 
 ABC CRM is an Odoo 19 addon. The repository root is the `abc_crm` addon directory and is mounted directly into Odoo as `/mnt/extra-addons/abc_crm`.
 
-The addon extends `crm.lead` with project qualification fields, lead rating, automatic disposition, sales-manager notifications, Philippine region data, and a bearer-authenticated lead intake endpoint.
+The addon extends `crm.lead` with project qualification fields, lead rating,
+automatic disposition, sales-manager notifications, Philippine region data, a
+bearer-authenticated JSON endpoint, and a public multi-step website form.
 
 ## Project Layout
 
@@ -30,14 +32,18 @@ The addon extends `crm.lead` with project qualification fields, lead rating, aut
 │   ├── ir_rule.xml
 │   └── res_groups.xml
 ├── static/
-│   └── src/
-│       ├── js/
-│       │   └── abc_crm_multi_step_form.js
-│       └── scss/
-│           └── abc_crm_multi_step_form.scss
+│   ├── src/
+│   │   ├── js/
+│   │   │   └── abc_crm_multi_step_form.js
+│   │   └── scss/
+│   │       └── abc_crm_multi_step_form.scss
+│   └── tests/
+│       └── abc_crm_multi_step_form_security_tests.js
 ├── tests/
 │   ├── test_crm_lead.py
-│   └── test_lead_controller.py
+│   ├── test_lead_controller.py
+│   ├── test_website_lead_browser.py
+│   └── test_website_lead_controller.py
 └── views/
     ├── crm_lead_views.xml
     └── website_snippets.xml
@@ -173,10 +179,10 @@ The pre-commit configuration checks whitespace, EOF, YAML, TOML, XML, large file
 Run all Odoo tests in a fresh database:
 
 ```bash
-rtk docker compose up -d db
-rtk docker compose exec db dropdb -U admin --if-exists abc_crm_test
+docker compose up -d db
+docker compose exec db dropdb -U admin --if-exists abc_crm_test
 
-rtk docker compose run --rm web odoo \
+docker compose run --rm web odoo \
   -d abc_crm_test \
   --init abc_crm \
   --test-enable \
@@ -188,7 +194,7 @@ rtk docker compose run --rm web odoo \
 Run only the lead controller test class:
 
 ```bash
-rtk docker compose run --rm web odoo \
+docker compose run --rm web odoo \
   -d abc_crm_test \
   --update abc_crm \
   --test-enable \
@@ -200,11 +206,35 @@ rtk docker compose run --rm web odoo \
 Run only the CRM lead model test class:
 
 ```bash
-rtk docker compose run --rm web odoo \
+docker compose run --rm web odoo \
   -d abc_crm_test \
   --update abc_crm \
   --test-enable \
   --test-tags=/abc_crm:TestCrmLead \
+  --stop-after-init \
+  --log-level=test
+```
+
+Run only the website lead controller test class:
+
+```bash
+docker compose run --rm web odoo \
+  -d abc_crm_test \
+  --update abc_crm \
+  --test-enable \
+  --test-tags=/abc_crm:TestAbcCrmWebsiteLeadController \
+  --stop-after-init \
+  --log-level=test
+```
+
+Run only the website lead browser security test class:
+
+```bash
+docker compose run --rm web odoo \
+  -d abc_crm_test \
+  --update abc_crm \
+  --test-enable \
+  --test-tags=/abc_crm:TestAbcCrmWebsiteLeadBrowser \
   --stop-after-init \
   --log-level=test
 ```
@@ -215,7 +245,8 @@ rtk docker compose run --rm web odoo \
 - Qualified lead conversion to an unassigned opportunity.
 - Unqualified lead lost disposition with `abc_crm.lost_reason_unqualified`.
 - `project_location` computation from address, region, zip, and country.
-- Model constraints for required/valid email, non-negative project value, non-past target date, and valid phone numbers.
+- Model constraints for non-negative project value, non-past target dates, and
+  valid phone numbers when a phone is provided.
 
 `tests/test_lead_controller.py` uses `HttpCase`, generates an API key for `base.user_admin`, and verifies:
 
@@ -224,10 +255,26 @@ rtk docker compose run --rm web odoo \
 - `function` mapping to the lead position/job title field.
 - `message` mapping to lead `name` and HTML `description`.
 - `project_location` mapping through `street` and the computed `project_location`.
-- Float, future date, Philippine phone, and boolean parsing.
+- Float, future date, Philippine phone, and strict `yes`/`no` parsing.
 - UTM source, medium, and campaign creation/defaulting/reuse.
 - Rating value `65` for the sample valid payload.
 - `400` responses for missing fields, unknown fields, invalid `company_type`, invalid booleans, invalid project value, and invalid date format.
+
+`tests/test_website_lead_controller.py` uses `HttpCase` and verifies:
+
+- Successful public form submission with Odoo CSRF protection.
+- Rejection of missing or invalid CSRF tokens without lead creation.
+- Server-side validation for email, phone, message length, company type, booleans, project value, date, unknown fields, and text length limits.
+- Honeypot submissions returning neutral success without creating leads.
+- Website UTM defaults: `Website` source and `Website Form` medium.
+- Qualification values limited to `yes` and `no`.
+
+`tests/test_website_lead_browser.py` runs browser security checks from `static/tests/abc_crm_multi_step_form_security_tests.js` and verifies:
+
+- Current, stale, and missing CSRF token handling.
+- Duplicate submission protection and request timeout recovery.
+- Cross-origin form action rejection.
+- Safe handling of invalid JSON, HTML error responses, and XSS-like payloads.
 
 ## Manifest Data
 
@@ -236,9 +283,15 @@ The addon depends on:
 - `base`
 - `spreadsheet_dashboard`
 - `board`
+- `sale_crm`
+- `partnership`
 - `crm`
 - `sales_team`
 - `website`
+- `phone_validation`
+
+The manifest declares version `1.0.0`, license `OEEL-1`, and installs the addon
+as an application.
 
 The current manifest loads:
 
@@ -256,14 +309,24 @@ Frontend assets are loaded through `web.assets_frontend`:
 - `static/src/js/abc_crm_multi_step_form.js`
 - `static/src/scss/abc_crm_multi_step_form.scss`
 
+Frontend test assets are loaded through `web.assets_tests`:
+
+- `static/tests/abc_crm_multi_step_form_security_tests.js`
+
 Current data/config notes:
 
 - `data/res.region.csv` loads Luzon, Visayas, and Mindanao.
-- `data/config_parameters.xml` defines `crm.passing_rate = 70`.
+- `data/config_parameters.xml` defines `abc_crm.passing_rate = 70`.
 - `data/lost_reason_data.xml` defines `abc_crm.lost_reason_unqualified` on Odoo 19 model `crm.lost.reason`.
-- `security/res_groups.xml` defines CRM role groups and adjusts CRM, board, dashboard, customer, team, and configuration menu visibility.
-- `security/ir.model.access.csv` grants role-based access to regions, CRM leads, CRM tags, sales teams, sales team members, and lead scoring frequency.
-- `security/ir_rule.xml` restricts representative and team-leader access to their own leads, teams, or team members.
+- `security/res_groups.xml` defines Marketing, Sales Manager, General Manager,
+  Sales Team Leader, and Sales Representative roles and adjusts CRM
+  configuration, team, board, and spreadsheet dashboard menu visibility.
+- `security/ir.model.access.csv` gives internal users read access to regions and
+  adds role-specific access for sales teams, sales team members, and sales
+  orders. CRM lead access continues to come from the standard sales groups
+  implied by the custom roles.
+- `security/ir_rule.xml` applies own-lead versus all-lead rules and adds
+  team/team-member scopes for Sales Representatives and Sales Team Leaders.
 
 ## CRM Behavior
 
@@ -287,26 +350,34 @@ Rating rules:
 
 When qualification fields are provided on create or changed on write:
 
-- Leads with `rating >= abc_crm.auto_convert_threshold` are converted to opportunities.
-- Leads with `rating < abc_crm.auto_convert_threshold` are marked lost.
-- If `abc_crm.auto_convert_threshold` is not configured, the code default is `70.0`.
+- Leads with `rating >= abc_crm.passing_rate` are converted to opportunities.
+- Leads with `rating < abc_crm.passing_rate` are marked lost.
+- If `abc_crm.passing_rate` is not configured, the code default is `70.0`.
 
 Converted opportunities are left unassigned by clearing `user_id` and `team_id`. If `abc_crm.group_sales_manager` has users, their partners are subscribed to the opportunity and receive the message `New opportunity requires assignment.`
 
 Team assignment behavior:
 
 - `allowed_user_ids` limits selectable assignees to members of the selected sales team.
-- `is_restricted` makes team and user assignment read-only for Marketing and General Manager users.
+- `is_restricted` makes team and user assignment read-only for Marketing and Sales Representative users.
 - The CRM form replaces `state_id` with `region_id`, adds Qualification Sheet and Client Information Sheet tabs, and hides the standard Misc page.
 
 Role and menu behavior:
 
-- `abc_crm.group_crm_own` is the shared own-document restriction group.
-- `abc_crm.group_sales_representative` sees own CRM documents and own team membership records.
-- `abc_crm.group_sales_team_leader` sees own team leads, teams, and team members.
-- `abc_crm.group_sales_manager` has broader sales manager access.
-- `abc_crm.group_marketing` has all-leads access and can create/update CRM leads, but assignment fields are restricted in the CRM form.
-- `abc_crm.group_general_manager` has read-oriented CRM visibility plus board and spreadsheet dashboard menus.
+- Marketing, Sales Manager, and General Manager imply Odoo's standard
+  `sales_team.group_sale_salesman_all_leads` group.
+- Sales Team Leader and Sales Representative imply Odoo's standard
+  `sales_team.group_sale_salesman` group.
+- Sales Managers can create and update sales teams and team members; Sales Team
+  Leaders can do so within their record-rule scope. Neither role receives
+  delete access from this addon's custom ACLs.
+- Sales Representatives receive read-only sales-team access and create/update
+  access to sales orders, without delete access from this addon.
+- `abc_crm.group_crm_all` and `abc_crm.group_crm_own` are declared but are not
+  currently implied by the five business roles.
+- The board and spreadsheet dashboard menus are enabled for all five business
+  roles. CRM configuration and team configuration menus are enabled for the
+  General Manager, Sales Manager, and Sales Team Leader roles.
 
 ## Lead Intake API
 
@@ -337,14 +408,14 @@ Example payload:
   "project_location": "Cebu City",
   "project_type": "Commercial",
   "estimated_project_value": "1250000.50",
-  "target_completion_date": "2026-12-31",
+  "target_completion_date": "2099-12-31",
   "company_type": "contractor",
-  "is_five_storey_up": true,
-  "is_ongoing": false,
-  "is_aac_user": true,
-  "is_open": false,
-  "has_aac_needs": true,
-  "has_design_specifications": true,
+  "is_five_storey_up": "yes",
+  "is_ongoing": "no",
+  "is_aac_user": "yes",
+  "is_open": "no",
+  "has_aac_needs": "yes",
+  "has_design_specifications": "yes",
   "utm_source": "Website",
   "utm_medium": "Form",
   "utm_campaign": "June Launch"
@@ -389,11 +460,13 @@ Accepted `company_type` values:
 - `architect`
 - `trader`
 
-Accepted boolean values:
+Each qualification field accepts exactly one of these JSON string values:
 
-- JSON booleans: `true`, `false`
-- Integers: `1`, `0`
-- Strings: `true`, `false`, `1`, `0`, `yes`, `no`, `y`, `n`
+- `"yes"`
+- `"no"`
+
+JSON booleans, integers, and aliases such as `"true"`, `"false"`, `"1"`,
+`"0"`, `"y"`, and `"n"` are rejected.
 
 Unknown payload fields are rejected.
 
@@ -412,7 +485,7 @@ Website form endpoint:
 POST /abc_crm/website/lead
 ```
 
-The website route is public, uses Odoo CSRF protection, and submits form-encoded data. It accepts the same lead field names and validation rules as `POST /abc_crm/lead`, plus these form-only fields:
+The website route is public, uses Odoo CSRF protection, and submits form-encoded data. It accepts the same lead field names as `POST /abc_crm/lead`, plus these form-only fields:
 
 - `csrf_token`: Odoo CSRF token.
 - `abc_crm_hp`: honeypot field; non-empty values return success without creating a lead.
@@ -421,6 +494,9 @@ The website route sets these UTM defaults for public form submissions:
 
 - `utm_source = Website`
 - `utm_medium = Website Form`
+
+Both lead intake routes accept only `yes` and `no` for qualification values,
+matching the radio values in the snippet.
 
 The snippet also sends this campaign default unless the form payload is changed:
 
@@ -432,7 +508,10 @@ The JavaScript widget handles step navigation, required-field validation, review
 
 CI is defined in `.github/workflows/ci.yml`.
 
-It runs manually through `workflow_dispatch`, and on pushes and pull requests to `main` when Python, XML, CSV, frontend asset, manifest, local tooling, Docker Compose, or workflow files change.
+It runs manually through `workflow_dispatch`, and on pushes and pull requests to
+`main` when Python, XML, CSV, `static/src` frontend asset, manifest, local
+tooling, Docker Compose, or workflow files change. A change only under
+`static/tests` does not currently match the automatic path filters.
 
 Jobs:
 
@@ -452,8 +531,10 @@ There is no separate Node or SCSS build job. The repository does not include a `
 
 - The repository is the addon directory itself; do not document or mount it as `custom_addons/abc_crm`.
 - `docker-compose.yaml` correctly mounts the repository to `/mnt/extra-addons/abc_crm`.
-- The manifest includes `website`, `sales_team`, `board`, `spreadsheet_dashboard`, `views/website_snippets.xml`, `security/ir_rule.xml`, and frontend assets under `web.assets_frontend`.
-- `data/config_parameters.xml` defines `crm.passing_rate`, while `models/crm_lead.py` reads `abc_crm.auto_convert_threshold`; unless the latter is configured in Odoo, the code uses `70.0`.
+- The manifest includes `website`, `phone_validation`, `sale_crm`, `partnership`, `sales_team`, `board`, `spreadsheet_dashboard`, `views/website_snippets.xml`, `security/ir_rule.xml`, frontend assets under `web.assets_frontend`, and browser test assets under `web.assets_tests`.
+- `data/config_parameters.xml` defines `abc_crm.passing_rate`, and `models/crm_lead.py` reads the same key with a code default of `70.0`.
+- Both `/abc_crm/lead` and `/abc_crm/website/lead` require `yes`/`no` strings
+  for all six qualification fields.
 - `pyproject.toml` is checked in and configures Ruff for Python 3.14.
 - `.pre-commit-config.yaml` is checked in and should be used for local quality gates.
 - `.github/pull_request_template.md` is checked in and documents expected PR context, Odoo impact, testing, screenshots, migration notes, and review checklist items.
