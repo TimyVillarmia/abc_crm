@@ -220,9 +220,7 @@ class TestAbcCrmLeadController(HttpCase):
             1,
         )
         self.assertEqual(
-            self.env["utm.campaign"].search_count(
-                [("name", "=", "Website Route Campaign")]
-            ),
+            self.env["utm.campaign"].search_count([("name", "=", "Website Route Campaign")]),
             1,
         )
 
@@ -329,9 +327,7 @@ class TestAbcCrmLeadController(HttpCase):
                 self.assertEqual(self._lead_count(), before_count)
 
     def test_rejects_invalid_estimated_project_value(self):
-        response = self._post_lead(
-            self._valid_payload(estimated_project_value="not a number")
-        )
+        response = self._post_lead(self._valid_payload(estimated_project_value="not a number"))
         body = self._json_response(response)
 
         self.assertEqual(response.status_code, 400)
@@ -344,9 +340,7 @@ class TestAbcCrmLeadController(HttpCase):
         )
 
     def test_rejects_invalid_target_completion_date(self):
-        response = self._post_lead(
-            self._valid_payload(target_completion_date="12/31/2026")
-        )
+        response = self._post_lead(self._valid_payload(target_completion_date="12/31/2026"))
         body = self._json_response(response)
 
         self.assertEqual(response.status_code, 400)

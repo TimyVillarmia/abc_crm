@@ -57,9 +57,7 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
     def _post_website_lead(self, payload, csrf_token=None, include_csrf=True):
         data = dict(payload)
         if include_csrf:
-            data["csrf_token"] = (
-                csrf_token if csrf_token is not None else self._csrf_token()
-            )
+            data["csrf_token"] = csrf_token if csrf_token is not None else self._csrf_token()
 
         return self.url_open(
             "/abc_crm/website/lead",
@@ -70,9 +68,7 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
     def _post_phone_validation(self, phone, csrf_token=None, include_csrf=True):
         data = {"phone": phone}
         if include_csrf:
-            data["csrf_token"] = (
-                csrf_token if csrf_token is not None else self._csrf_token()
-            )
+            data["csrf_token"] = csrf_token if csrf_token is not None else self._csrf_token()
 
         return self.url_open(
             "/abc_crm/website/phone/validate",
@@ -155,9 +151,7 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
 
         for overrides in invalid_cases:
             with self.subTest(overrides=overrides):
-                body = self._assert_rejected_without_lead(
-                    self._valid_payload(**overrides)
-                )
+                body = self._assert_rejected_without_lead(self._valid_payload(**overrides))
                 self.assertFalse(body["success"])
 
     def test_phone_validation_route_uses_the_lead_phone_parser(self):
@@ -193,9 +187,7 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
 
     def test_honeypot_returns_neutral_success_without_creating_lead(self):
         with self._assert_lead_delta(0):
-            response = self._post_website_lead(
-                self._valid_payload(abc_crm_hp="bot-value")
-            )
+            response = self._post_website_lead(self._valid_payload(abc_crm_hp="bot-value"))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -242,9 +234,7 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
                     )
                 self.assertEqual(response.status_code, 201)
 
-        body = self._assert_rejected_without_lead(
-            self._valid_payload(company_type="supplier")
-        )
+        body = self._assert_rejected_without_lead(self._valid_payload(company_type="supplier"))
         self.assertFalse(body["success"])
         self.assertIn("Invalid company_type", body["error"])
 
@@ -261,16 +251,12 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
         for field_name in yes_no_fields:
             with self.subTest(field_name=field_name, value="yes"):
                 with self._assert_lead_delta(1):
-                    response = self._post_website_lead(
-                        self._valid_payload(**{field_name: "yes"})
-                    )
+                    response = self._post_website_lead(self._valid_payload(**{field_name: "yes"}))
                 self.assertEqual(response.status_code, 201)
 
             with self.subTest(field_name=field_name, value="no"):
                 with self._assert_lead_delta(1):
-                    response = self._post_website_lead(
-                        self._valid_payload(**{field_name: "no"})
-                    )
+                    response = self._post_website_lead(self._valid_payload(**{field_name: "no"}))
                 self.assertEqual(response.status_code, 201)
 
             for invalid_value in ["true", "false", "1", "0", "y", "n", "maybe"]:
@@ -316,9 +302,7 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
                 self.assertEqual(response.status_code, 201)
 
     def test_project_value_validation(self):
-        body = self._assert_rejected_without_lead(
-            self._valid_payload(estimated_project_value="-1")
-        )
+        body = self._assert_rejected_without_lead(self._valid_payload(estimated_project_value="-1"))
         self.assertFalse(body["success"])
         self.assertIn("Estimated Project Value cannot be negative", body["error"])
 
