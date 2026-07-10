@@ -50,7 +50,7 @@ class CrmLead(models.Model):
             return
 
         allowed_stages = self.env["crm.stage"].search([
-            ("name", "in", ["Initial Contact", "Qualified"])
+            ("name", "in", ["Initial Contact", "Qualified", "New"])
         ])
 
         if vals["stage_id"] not in allowed_stages.ids:
