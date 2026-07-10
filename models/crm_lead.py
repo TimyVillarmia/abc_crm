@@ -5,6 +5,7 @@ from odoo.addons.phone_validation.tools.phone_validation import (
 from odoo.exceptions import UserError, ValidationError, AccessError
 
 
+
 class CrmLead(models.Model):
     _inherit = "crm.lead"
 
@@ -42,6 +43,7 @@ class CrmLead(models.Model):
         compute="_compute_allowed_user_ids",
     )
     
+        
     def _check_stage_permissions(self, vals):
         if "stage_id" not in vals:
             return
@@ -57,6 +59,20 @@ class CrmLead(models.Model):
             raise ValidationError(
                 "Marketing users can only move leads between Initial Contact and Qualified."
             )
+            
+    def _check_forbidden(self, vals):
+        allowed = {"stage_id"}
+        forbidden = set(vals) - allowed
+        
+        if not forbidden:
+            return
+        
+        for lead in self:            
+            if lead.won_status == "won":
+                raise UserError("Opportunity cannot be modified. Move opportunity out of the stage to edit")
+            
+            if lead.won_status == "lost":
+                raise UserError("Opportunity cannot be modified. Restore opportunity to edit")
             
     def action_new_quotation(self):
         if self.env.user.has_group("abc_crm.group_marketing"):
@@ -83,6 +99,7 @@ class CrmLead(models.Model):
                 lead.allowed_user_ids = members.mapped("user_id")
             else:
                 lead.allowed_user_ids = self.env["res.users"].search([])
+
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -132,6 +149,8 @@ class CrmLead(models.Model):
 
     def write(self, vals):
         self._check_stage_permissions(vals)
+        
+        self._check_forbidden(vals)
         
         qualifying_fields = {
             "is_five_storey_up",
