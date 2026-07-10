@@ -3,6 +3,7 @@
 import logging
 
 from odoo import _, fields, http
+from odoo.addons.phone_validation.tools.phone_validation import phone_parse
 from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.http import request
 from odoo.tools import single_email_re
@@ -11,6 +12,18 @@ _logger = logging.getLogger(__name__)
 
 
 class AbcCrmLeadController(http.Controller):
+    text_field_max_lengths = {
+        "contact_name": 120,
+        "partner_name": 160,
+        "function": 120,
+        "project_name": 160,
+        "project_location": 255,
+        "project_type": 120,
+        "email_from": 254,
+        "phone": 32,
+        "message": 1000,
+    }
+
     allowed_fields = {
         # Contact fields
         "contact_name",
@@ -105,6 +118,7 @@ class AbcCrmLeadController(http.Controller):
         auth="public",
         methods=["POST"],
         website=True,
+        csrf=True,
     )
     def create_website_lead(self, **kwargs):
         extra_fields = {"csrf_token", "abc_crm_hp"}
@@ -138,7 +152,11 @@ class AbcCrmLeadController(http.Controller):
         )
 
         try:
-            lead = self._create_lead_from_payload(payload, sudo=True)
+            lead = self._create_lead_from_payload(
+                payload,
+                sudo=True,
+                strict_website_booleans=True,
+            )
         except (ValidationError, UserError) as error:
             return self._json_error(str(error), 400)
         except Exception:
@@ -153,7 +171,12 @@ class AbcCrmLeadController(http.Controller):
             status=201,
         )
 
-    def _create_lead_from_payload(self, payload, sudo=False):
+    def _create_lead_from_payload(
+        self,
+        payload,
+        sudo=False,
+        strict_website_booleans=False,
+    ):
         self._validate_payload(payload)
         self._validate_company_type(payload.get("company_type"))
 
@@ -201,13 +224,29 @@ class AbcCrmLeadController(http.Controller):
             ),
             "company_type": self._clean_string(payload.get("company_type")),
             "street": self._clean_string(payload.get("project_location")),
-            "is_five_storey_up": self._parse_bool(payload.get("is_five_storey_up")),
-            "is_ongoing": self._parse_bool(payload.get("is_ongoing")),
-            "is_aac_user": self._parse_bool(payload.get("is_aac_user")),
-            "is_open": self._parse_bool(payload.get("is_open")),
-            "has_aac_needs": self._parse_bool(payload.get("has_aac_needs")),
+            "is_five_storey_up": self._parse_bool(
+                payload.get("is_five_storey_up"),
+                strict_yes_no=strict_website_booleans,
+            ),
+            "is_ongoing": self._parse_bool(
+                payload.get("is_ongoing"),
+                strict_yes_no=strict_website_booleans,
+            ),
+            "is_aac_user": self._parse_bool(
+                payload.get("is_aac_user"),
+                strict_yes_no=strict_website_booleans,
+            ),
+            "is_open": self._parse_bool(
+                payload.get("is_open"),
+                strict_yes_no=strict_website_booleans,
+            ),
+            "has_aac_needs": self._parse_bool(
+                payload.get("has_aac_needs"),
+                strict_yes_no=strict_website_booleans,
+            ),
             "has_design_specifications": self._parse_bool(
-                payload.get("has_design_specifications")
+                payload.get("has_design_specifications"),
+                strict_yes_no=strict_website_booleans,
             ),
             # UTM relational fields
             "source_id": source.id,
@@ -249,7 +288,9 @@ class AbcCrmLeadController(http.Controller):
             )
 
         self._validate_email(payload.get("email_from"))
+        self._validate_text_lengths(payload)
         self._validate_message(payload.get("message"))
+        self._validate_phone(payload.get("phone"))
 
     def _validate_email(self, email):
         clean_email = self._clean_string(email)
@@ -259,6 +300,32 @@ class AbcCrmLeadController(http.Controller):
 
         if not single_email_re.fullmatch(clean_email):
             raise ValidationError(_("Please enter a valid email address."))
+
+    def _validate_phone(self, phone):
+        clean_phone = self._clean_string(phone)
+
+        if not clean_phone:
+            raise ValidationError(_("Phone is required."))
+
+        try:
+            phone_parse(clean_phone, "PH")
+        except UserError as error:
+            raise ValidationError(
+                _("Please enter a valid phone or landline number.")
+            ) from error
+
+    def _validate_text_lengths(self, payload):
+        for field_name, max_length in self.text_field_max_lengths.items():
+            value = self._clean_string(payload.get(field_name))
+
+            if len(value) > max_length:
+                raise ValidationError(
+                    _("%(field)s cannot exceed %(max_length)s characters.")
+                    % {
+                        "field": field_name,
+                        "max_length": max_length,
+                    }
+                )
 
     def _get_or_create_utm(self, model_name, name, sudo=False):
         clean_name = self._clean_string(name)
@@ -298,7 +365,18 @@ class AbcCrmLeadController(http.Controller):
                 % ", ".join(sorted(allowed_company_types))
             )
 
-    def _parse_bool(self, value):
+    def _parse_bool(self, value, strict_yes_no=False):
+        if strict_yes_no:
+            clean_value = self._clean_string(value).lower()
+
+            if clean_value == "yes":
+                return True
+
+            if clean_value == "no":
+                return False
+
+            raise ValidationError("Invalid boolean value: %s" % value)
+
         if isinstance(value, bool):
             return value
 
@@ -337,11 +415,16 @@ class AbcCrmLeadController(http.Controller):
             return 0.0
 
         try:
-            return float(clean_value)
+            parsed_value = float(clean_value)
         except ValueError as error:
             raise ValidationError(
                 "Invalid estimated_project_value: %s" % value
             ) from error
+
+        if parsed_value < 0:
+            raise ValidationError(_("Estimated Project Value cannot be negative."))
+
+        return parsed_value
 
     def _parse_date(self, value):
         clean_value = self._clean_string(value)
@@ -350,11 +433,18 @@ class AbcCrmLeadController(http.Controller):
             return False
 
         try:
-            return fields.Date.to_date(clean_value)
+            parsed_date = fields.Date.to_date(clean_value)
         except Exception as error:
             raise ValidationError(
                 "Invalid target_completion_date. Use YYYY-MM-DD."
             ) from error
+
+        today = fields.Date.context_today(request.env.user)
+
+        if parsed_date < today:
+            raise ValidationError(_("Target Completion Date cannot be in the past."))
+
+        return parsed_date
 
     def _clean_string(self, value):
         return str(value or "").strip()

@@ -6,7 +6,7 @@
             <div class="container">
                 <form class="abc-crm-form" action="/abc_crm/website/lead" method="post"
                     novalidate="novalidate">
-                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()" />
+                    <input type="hidden" name="csrf_token" />
                     <input type="text" name="abc_crm_hp" class="abc-crm-hp" tabindex="-1"
                         autocomplete="off" aria-hidden="true" />
 

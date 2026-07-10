@@ -29,6 +29,9 @@
             "abc_crm/static/src/js/abc_crm_multi_step_form.js",
             "abc_crm/static/src/scss/abc_crm_multi_step_form.scss",
         ],
+        "web.assets_tests": [
+            "abc_crm/static/tests/abc_crm_multi_step_form_security_tests.js",
+        ],
     },
     "installable": True,
     "application": True,
