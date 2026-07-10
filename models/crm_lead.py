@@ -59,7 +59,7 @@ class CrmLead(models.Model):
             )
 
     def _check_forbidden(self, vals):
-        allowed = {"stage_id", "active", "rating"}
+        allowed = {"stage_id", "active"}
         forbidden = set(vals) - allowed
 
         if not forbidden:
