@@ -54,6 +54,9 @@ class TestAbcCrmLeadController(HttpCase):
     def _json_response(self, response):
         return json.loads(response.content.decode())
 
+    def _lead_count(self):
+        return self.env["crm.lead"].with_context(active_test=False).search_count([])
+
     def _valid_payload(self, **overrides):
         payload = {
             "contact_name": "  Jane Buyer  ",
@@ -297,17 +300,33 @@ class TestAbcCrmLeadController(HttpCase):
         self.assertIn("Invalid company_type.", body["error"])
 
     def test_rejects_invalid_boolean_value(self):
-        response = self._post_lead(self._valid_payload(is_open="sometimes"))
-        body = self._json_response(response)
+        invalid_values = [
+            "true",
+            "false",
+            "1",
+            "0",
+            "y",
+            "n",
+            True,
+            False,
+            "sometimes",
+        ]
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            body,
-            {
-                "success": False,
-                "error": "Invalid boolean value: sometimes",
-            },
-        )
+        for invalid_value in invalid_values:
+            with self.subTest(invalid_value=invalid_value):
+                before_count = self._lead_count()
+                response = self._post_lead(self._valid_payload(is_open=invalid_value))
+                body = self._json_response(response)
+
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(
+                    body,
+                    {
+                        "success": False,
+                        "error": "Invalid boolean value: %s" % invalid_value,
+                    },
+                )
+                self.assertEqual(self._lead_count(), before_count)
 
     def test_rejects_invalid_estimated_project_value(self):
         response = self._post_lead(

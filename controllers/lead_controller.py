@@ -155,7 +155,6 @@ class AbcCrmLeadController(http.Controller):
             lead = self._create_lead_from_payload(
                 payload,
                 sudo=True,
-                strict_website_booleans=True,
             )
         except (ValidationError, UserError) as error:
             return self._json_error(str(error), 400)
@@ -175,7 +174,6 @@ class AbcCrmLeadController(http.Controller):
         self,
         payload,
         sudo=False,
-        strict_website_booleans=False,
     ):
         self._validate_payload(payload)
         self._validate_company_type(payload.get("company_type"))
@@ -224,29 +222,13 @@ class AbcCrmLeadController(http.Controller):
             ),
             "company_type": self._clean_string(payload.get("company_type")),
             "street": self._clean_string(payload.get("project_location")),
-            "is_five_storey_up": self._parse_bool(
-                payload.get("is_five_storey_up"),
-                strict_yes_no=strict_website_booleans,
-            ),
-            "is_ongoing": self._parse_bool(
-                payload.get("is_ongoing"),
-                strict_yes_no=strict_website_booleans,
-            ),
-            "is_aac_user": self._parse_bool(
-                payload.get("is_aac_user"),
-                strict_yes_no=strict_website_booleans,
-            ),
-            "is_open": self._parse_bool(
-                payload.get("is_open"),
-                strict_yes_no=strict_website_booleans,
-            ),
-            "has_aac_needs": self._parse_bool(
-                payload.get("has_aac_needs"),
-                strict_yes_no=strict_website_booleans,
-            ),
+            "is_five_storey_up": self._parse_bool(payload.get("is_five_storey_up")),
+            "is_ongoing": self._parse_bool(payload.get("is_ongoing")),
+            "is_aac_user": self._parse_bool(payload.get("is_aac_user")),
+            "is_open": self._parse_bool(payload.get("is_open")),
+            "has_aac_needs": self._parse_bool(payload.get("has_aac_needs")),
             "has_design_specifications": self._parse_bool(
                 payload.get("has_design_specifications"),
-                strict_yes_no=strict_website_booleans,
             ),
             # UTM relational fields
             "source_id": source.id,
@@ -365,36 +347,13 @@ class AbcCrmLeadController(http.Controller):
                 % ", ".join(sorted(allowed_company_types))
             )
 
-    def _parse_bool(self, value, strict_yes_no=False):
-        if strict_yes_no:
-            clean_value = self._clean_string(value).lower()
-
-            if clean_value == "yes":
-                return True
-
-            if clean_value == "no":
-                return False
-
-            raise ValidationError("Invalid boolean value: %s" % value)
-
-        if isinstance(value, bool):
-            return value
-
-        if isinstance(value, int):
-            if value == 1:
-                return True
-
-            if value == 0:
-                return False
-
-            raise ValidationError("Invalid boolean value: %s" % value)
-
+    def _parse_bool(self, value):
         clean_value = self._clean_string(value).lower()
 
-        if clean_value in {"true", "1", "yes", "y"}:
+        if clean_value == "yes":
             return True
 
-        if clean_value in {"false", "0", "no", "n"}:
+        if clean_value == "no":
             return False
 
         raise ValidationError("Invalid boolean value: %s" % value)
