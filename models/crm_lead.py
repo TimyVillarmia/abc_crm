@@ -71,7 +71,6 @@ class CrmLead(models.Model):
                     "Opportunity cannot be modified. Move opportunity out of the stage to edit"
                 )
 
-
     def action_new_quotation(self):
         if self.env.user.has_group("abc_crm.group_marketing"):
             raise AccessError("Marketing users are not allowed to create quotations.")
