@@ -55,6 +55,22 @@
     return node;
   }
 
+  function stepIsVisible(index) {
+    const step = form().querySelector(`[data-step="${index}"]`);
+    assert(step, `Expected step ${index} to exist`);
+    return !step.classList.contains("d-none");
+  }
+
+  async function advanceToStep(index) {
+    const nextButton = document.querySelector(".abc-crm-form__next");
+    assert(nextButton, "Expected next button to exist");
+    nextButton.click();
+    await waitFor(
+      () => stepIsVisible(index),
+      `Expected form to advance to step ${index + 1}`,
+    );
+  }
+
   function setValue(name, value) {
     const control = form().querySelector(`[name="${CSS.escape(name)}"]`);
     assert(control, `Expected control ${name} to exist`);
@@ -292,31 +308,80 @@
     }
   }
 
+  async function testPhoneValidationBlocksInvalidNumber() {
+    resetFormState();
+    fillValidForm({ phone: "1234567" });
+
+    const originalFetch = window.fetch;
+    const calls = [];
+    window.fetch = async function (url, options = {}) {
+      calls.push({ url, options, formData: options.body });
+      return new Response(
+        JSON.stringify({
+          valid: false,
+          error: "Please enter a valid phone or landline number.",
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    };
+
+    try {
+      const nextButton = document.querySelector(".abc-crm-form__next");
+      assert(nextButton, "Expected next button to exist");
+      nextButton.click();
+
+      await waitFor(
+        () => alertNode().textContent.includes("valid phone or landline"),
+        "Expected invalid phone error",
+      );
+      assert(stepIsVisible(0), "Expected invalid phone to remain on Step 1");
+      assert(
+        form().querySelector('[name="phone"]').classList.contains("is-invalid"),
+        "Expected invalid phone to be highlighted",
+      );
+      assert(calls.length === 1, "Expected one phone validation request");
+      assert(
+        new URL(calls[0].url, window.location.origin).pathname ===
+          "/abc_crm/website/phone/validate",
+        "Expected phone validation endpoint",
+      );
+      assert(calls[0].formData.get("phone") === "1234567", "Expected submitted phone");
+    } finally {
+      window.fetch = originalFetch;
+    }
+  }
+
   async function testXssProtection() {
     resetFormState();
     fillValidForm({ contact_name: XSS_PAYLOAD });
     window.__xssExecuted = false;
 
-    const nextButton = document.querySelector(".abc-crm-form__next");
-    assert(nextButton, "Expected next button to exist");
-    for (let index = 0; index < 3; index++) {
-      nextButton.click();
-      await nextFrame();
-    }
-
-    const reviewNode = document.querySelector('[data-review="contact_name"]');
-    assert(reviewNode.textContent === XSS_PAYLOAD, "Expected review value as text");
-    assert(!reviewNode.querySelector("img, script"), "Expected no review HTML injection");
-    assert(window.__xssExecuted === false, "Expected review payload not to execute");
-
     const originalFetch = window.fetch;
-    window.fetch = async () =>
-      new Response(JSON.stringify({ success: false, error: XSS_PAYLOAD }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-
     try {
+      window.fetch = async () =>
+        new Response(JSON.stringify({ valid: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+
+      await advanceToStep(1);
+      await advanceToStep(2);
+      await advanceToStep(3);
+
+      const reviewNode = document.querySelector('[data-review="contact_name"]');
+      assert(reviewNode.textContent === XSS_PAYLOAD, "Expected review value as text");
+      assert(!reviewNode.querySelector("img, script"), "Expected no review HTML injection");
+      assert(window.__xssExecuted === false, "Expected review payload not to execute");
+
+      window.fetch = async () =>
+        new Response(JSON.stringify({ success: false, error: XSS_PAYLOAD }), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+
       await submitForm();
       await waitFor(
         () => alertNode().textContent.includes("<img"),
@@ -391,6 +456,7 @@
       await testCrossOriginActionProtection();
       await testInvalidJsonResponse();
       await testHtmlResponseSafety();
+      await testPhoneValidationBlocksInvalidNumber();
       await testXssProtection();
       await testRequestTimeout();
 

@@ -15,14 +15,14 @@
         "phone_validation",
     ],
     "data": [
-        "data/res.region.csv",
-        "data/config_parameters.xml",
-        "views/crm_lead_views.xml",
-        "views/website_snippets.xml",
         "security/res_groups.xml",
         "security/ir.model.access.csv",
         "security/ir_rule.xml",
+        "data/res.region.csv",
+        "data/config_parameters.xml",
         "data/lost_reason_data.xml",
+        "views/crm_lead_views.xml",
+        "views/website_snippets.xml",
     ],
     "assets": {
         "web.assets_frontend": [
