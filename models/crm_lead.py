@@ -40,7 +40,23 @@ class CrmLead(models.Model):
     allowed_user_ids = fields.Many2many(
         "res.users",
         compute="_compute_allowed_user_ids",
+        store=True
     )
+    can_convert = fields.Boolean(compute="_compute_can_convert", store=True)
+    
+    @api.depends("rating", "is_restricted")
+    def _compute_can_convert(self):
+        threshold = float(
+            self.env["ir.config_parameter"]
+            .sudo()
+            .get_param("abc_crm.passing_rate", 70)
+        )
+
+        for lead in self:
+            lead.can_convert = (
+                not lead.is_restricted
+                and lead.rating >= threshold
+            )
 
     def _check_stage_permissions(self, vals):
         if "stage_id" not in vals:
