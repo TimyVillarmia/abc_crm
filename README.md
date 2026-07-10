@@ -140,17 +140,7 @@ Ruff is configured in `pyproject.toml`:
 Run local checks:
 
 ```bash
-ruff check .
-ruff format --check .
-python3 -m compileall .
-python3 - <<'PY'
-from pathlib import Path
-import xml.etree.ElementTree as ET
-
-for path in sorted(Path(".").rglob("*.xml")):
-    ET.parse(path)
-    print(path)
-PY
+pre-commit run --all-files
 ```
 
 Apply safe Ruff fixes and formatting:
@@ -163,7 +153,8 @@ ruff format .
 Install pre-commit hooks:
 
 ```bash
-pre-commit install
+pre-commit install --install-hooks
+test -x .git/hooks/pre-commit
 ```
 
 Run all pre-commit hooks manually:
@@ -172,7 +163,7 @@ Run all pre-commit hooks manually:
 pre-commit run --all-files
 ```
 
-The pre-commit configuration checks whitespace, EOF, YAML, TOML, XML, large files, merge conflicts, case conflicts, line endings, debug statements, private keys, Ruff lint/format, Python compilation, and guards against committing `odoo.conf` or `.env` files. The `pylint-odoo` hook is configured for manual runs.
+The pre-commit configuration checks whitespace, EOF, YAML, TOML, XML, Python syntax, large files, merge conflicts, case conflicts, line endings, debug statements, private keys, Ruff lint/format, and staged `odoo.conf` or `.env` files. The `pylint-odoo` hook is configured for manual runs.
 
 ## Tests
 
@@ -515,9 +506,9 @@ tooling, Docker Compose, or workflow files change. A change only under
 
 Jobs:
 
-- `lint`: runs Ruff, Ruff format check, Python compile, XML syntax validation, and non-blocking `pylint-odoo`.
+- `lint`: runs all pre-commit checks and non-blocking `pylint-odoo`.
 - `test`: starts PostgreSQL `18`, mounts the repository as `/mnt/extra-addons/abc_crm:ro` inside `odoo:19.0`, installs `abc_crm`, and runs `--test-tags=/abc_crm`.
-- `security`: runs Gitleaks on pushes to `main`.
+- `security`: runs Gitleaks on every pull request and push to `main`.
 
 CI timeout limits:
 

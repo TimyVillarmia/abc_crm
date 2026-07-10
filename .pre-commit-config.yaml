@@ -1,3 +1,5 @@
+default_install_hook_types: [pre-commit]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -6,9 +8,9 @@ repos:
         exclude: ^static/description/.*$
       - id: end-of-file-fixer
       - id: check-yaml
-        exclude: ^\.github/workflows/.*\.ya?ml$
       - id: check-toml
       - id: check-xml
+      - id: check-ast
       - id: check-added-large-files
         args: ["--maxkb=1024"]
       - id: check-merge-conflict
@@ -27,24 +29,19 @@ repos:
 
   - repo: local
     hooks:
-      - id: python-compileall
-        name: Check Python files compile
-        entry: python -m compileall .
-        language: system
-        pass_filenames: false
-        types: [python]
-
       - id: no-real-odoo-conf
         name: Prevent committing real odoo.conf
-        entry: bash -c 'test ! -f odoo.conf || (echo "Do not commit real odoo.conf. Use odoo.conf.example instead."; exit 1)'
+        entry: bash -c 'echo "Do not commit real odoo.conf. Use odoo.conf.example instead."; exit 1'
         language: system
         pass_filenames: false
+        files: (^|/)odoo\.conf$
 
       - id: no-env-files
         name: Prevent committing env files
-        entry: bash -c '! find . -maxdepth 2 \( -name ".env" -o -name ".env.*" \) | grep -q . || (echo "Do not commit .env files."; exit 1)'
+        entry: bash -c 'echo "Do not commit .env files."; exit 1'
         language: system
         pass_filenames: false
+        files: (^|/)\.env(?:\..+)?$
 
       - id: pylint-odoo
         name: Pylint Odoo check
