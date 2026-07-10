@@ -67,6 +67,19 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 
+    def _post_phone_validation(self, phone, csrf_token=None, include_csrf=True):
+        data = {"phone": phone}
+        if include_csrf:
+            data["csrf_token"] = (
+                csrf_token if csrf_token is not None else self._csrf_token()
+            )
+
+        return self.url_open(
+            "/abc_crm/website/phone/validate",
+            data=data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
     def _assert_rejected_without_lead(self, payload, expected_status=400):
         with self._assert_lead_delta(0):
             response = self._post_website_lead(payload)
@@ -146,6 +159,26 @@ class TestAbcCrmWebsiteLeadController(HttpCase):
                     self._valid_payload(**overrides)
                 )
                 self.assertFalse(body["success"])
+
+    def test_phone_validation_route_uses_the_lead_phone_parser(self):
+        for phone in ["09170000000", "+639170000000", "02 8123 4567"]:
+            with self.subTest(phone=phone):
+                with self._assert_lead_delta(0):
+                    response = self._post_phone_validation(phone)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(self._json_response(response), {"valid": True})
+
+        with self._assert_lead_delta(0):
+            response = self._post_phone_validation("1234567")
+
+        self.assertEqual(response.status_code, 200)
+        body = self._json_response(response)
+        self.assertFalse(body["valid"])
+        self.assertEqual(
+            body["error"],
+            "Please enter a valid phone or landline number.",
+        )
 
     def test_unknown_fields_are_rejected(self):
         body = self._assert_rejected_without_lead(self._valid_payload(is_admin="true"))

@@ -170,6 +170,33 @@ class AbcCrmLeadController(http.Controller):
             status=201,
         )
 
+    @http.route(
+        "/abc_crm/website/phone/validate",
+        type="http",
+        auth="public",
+        methods=["POST"],
+        website=True,
+        csrf=True,
+    )
+    def validate_website_phone(self, phone=None, **kwargs):
+        if kwargs:
+            return self._json_error(
+                "Unknown field(s): %s" % ", ".join(sorted(kwargs)),
+                400,
+            )
+
+        try:
+            self._validate_phone(phone)
+        except (ValidationError, UserError) as error:
+            return request.make_json_response(
+                {
+                    "valid": False,
+                    "error": str(error),
+                }
+            )
+
+        return request.make_json_response({"valid": True})
+
     def _create_lead_from_payload(
         self,
         payload,

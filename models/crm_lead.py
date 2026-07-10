@@ -2,7 +2,7 @@ from odoo import _, api, fields, models
 from odoo.addons.phone_validation.tools.phone_validation import (
     phone_parse,
 )
-from odoo.exceptions import UserError, ValidationError, AccessError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class CrmLead(models.Model):
@@ -41,7 +41,7 @@ class CrmLead(models.Model):
         "res.users",
         compute="_compute_allowed_user_ids",
     )
-    
+
     def _check_stage_permissions(self, vals):
         if "stage_id" not in vals:
             return
@@ -49,20 +49,18 @@ class CrmLead(models.Model):
         if not self.env.user.has_group("abc_crm.group_marketing"):
             return
 
-        allowed_stages = self.env["crm.stage"].search([
-            ("name", "in", ["Initial Contact", "Qualified", "New"])
-        ])
+        allowed_stages = self.env["crm.stage"].search(
+            [("name", "in", ["Initial Contact", "Qualified", "New"])]
+        )
 
         if vals["stage_id"] not in allowed_stages.ids:
             raise ValidationError(
-                "Marketing users can only move leads between Initial Contact and Qualified."
+                "Marketing users can only move leads from Initial Contact to Qualified."
             )
-            
+
     def action_new_quotation(self):
         if self.env.user.has_group("abc_crm.group_marketing"):
-            raise AccessError(
-                "Marketing users are not allowed to create quotations."
-            )
+            raise AccessError("Marketing users are not allowed to create quotations.")
 
         return super().action_new_quotation()
 
@@ -132,7 +130,7 @@ class CrmLead(models.Model):
 
     def write(self, vals):
         self._check_stage_permissions(vals)
-        
+
         qualifying_fields = {
             "is_five_storey_up",
             "is_ongoing",
@@ -180,8 +178,6 @@ class CrmLead(models.Model):
             unqualified.action_set_lost()
 
         return res
-    
-    
 
     @api.depends("street", "street2", "city", "region_id", "zip", "country_id")
     def _compute_project_location(self):
@@ -232,12 +228,10 @@ class CrmLead(models.Model):
                 kwargs["lost_reason_id"] = unqualified_reason.id
 
         return super().action_set_lost(**kwargs)
-    
+
     def action_set_won(self):
         if self.env.user.has_group("abc_crm.group_marketing"):
-            raise AccessError(
-                "Marketing users cannot mark opportunities as Won."
-            )
+            raise AccessError("Marketing users cannot mark opportunities as Won.")
         return super().action_set_won()
 
     @api.constrains("estimated_project_value")
