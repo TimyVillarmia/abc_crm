@@ -47,8 +47,7 @@ class TestAbcCrmWebsiteLeadBrowser(HttpCase):
                 })();
             """,
             ready=(
-                "document.querySelector('.abc-crm-form') && "
-                "window.abcCrmMultiStepFormSecurityTests"
+                "document.querySelector('.abc-crm-form') && window.abcCrmMultiStepFormSecurityTests"
             ),
             timeout=90,
         )

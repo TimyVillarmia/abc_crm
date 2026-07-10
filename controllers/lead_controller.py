@@ -241,12 +241,8 @@ class AbcCrmLeadController(http.Controller):
             # Project fields
             "project_name": self._clean_string(payload.get("project_name")),
             "project_type": self._clean_string(payload.get("project_type")),
-            "estimated_project_value": self._parse_float(
-                payload.get("estimated_project_value")
-            ),
-            "target_completion_date": self._parse_date(
-                payload.get("target_completion_date")
-            ),
+            "estimated_project_value": self._parse_float(payload.get("estimated_project_value")),
+            "target_completion_date": self._parse_date(payload.get("target_completion_date")),
             "company_type": self._clean_string(payload.get("company_type")),
             "street": self._clean_string(payload.get("project_location")),
             "is_five_storey_up": self._parse_bool(payload.get("is_five_storey_up")),
@@ -284,17 +280,13 @@ class AbcCrmLeadController(http.Controller):
         ]
 
         missing_boolean_fields = [
-            field_name
-            for field_name in self.required_boolean_fields
-            if field_name not in payload
+            field_name for field_name in self.required_boolean_fields if field_name not in payload
         ]
 
         missing_fields = missing_text_fields + missing_boolean_fields
 
         if missing_fields:
-            raise ValidationError(
-                "Missing required field(s): %s" % ", ".join(missing_fields)
-            )
+            raise ValidationError("Missing required field(s): %s" % ", ".join(missing_fields))
 
         self._validate_email(payload.get("email_from"))
         self._validate_text_lengths(payload)
@@ -319,9 +311,7 @@ class AbcCrmLeadController(http.Controller):
         try:
             phone_parse(clean_phone, "PH")
         except UserError as error:
-            raise ValidationError(
-                _("Please enter a valid phone or landline number.")
-            ) from error
+            raise ValidationError(_("Please enter a valid phone or landline number.")) from error
 
     def _validate_text_lengths(self, payload):
         for field_name, max_length in self.text_field_max_lengths.items():
@@ -403,9 +393,7 @@ class AbcCrmLeadController(http.Controller):
         try:
             parsed_value = float(clean_value)
         except ValueError as error:
-            raise ValidationError(
-                "Invalid estimated_project_value: %s" % value
-            ) from error
+            raise ValidationError("Invalid estimated_project_value: %s" % value) from error
 
         if parsed_value < 0:
             raise ValidationError(_("Estimated Project Value cannot be negative."))
@@ -421,9 +409,7 @@ class AbcCrmLeadController(http.Controller):
         try:
             parsed_date = fields.Date.to_date(clean_value)
         except Exception as error:
-            raise ValidationError(
-                "Invalid target_completion_date. Use YYYY-MM-DD."
-            ) from error
+            raise ValidationError("Invalid target_completion_date. Use YYYY-MM-DD.") from error
 
         today = fields.Date.context_today(request.env.user)
 
@@ -451,9 +437,7 @@ class AbcCrmLeadController(http.Controller):
             "function": lead.function,
             "estimated_project_value": lead.estimated_project_value,
             "target_completion_date": (
-                lead.target_completion_date.isoformat()
-                if lead.target_completion_date
-                else False
+                lead.target_completion_date.isoformat() if lead.target_completion_date else False
             ),
             "company_type": lead.company_type,
             "rating": lead.rating,

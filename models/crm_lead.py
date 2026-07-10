@@ -72,9 +72,7 @@ class CrmLead(models.Model):
                 )
 
             if lead.won_status == "lost":
-                raise UserError(
-                    "Opportunity cannot be modified. Restore opportunity to edit"
-                )
+                raise UserError("Opportunity cannot be modified. Restore opportunity to edit")
 
     def action_new_quotation(self):
         if self.env.user.has_group("abc_crm.group_marketing"):
@@ -113,9 +111,7 @@ class CrmLead(models.Model):
 
         records = super().create(vals_list)
 
-        has_qualifying = any(
-            qualifying_fields.intersection(vals.keys()) for vals in vals_list
-        )
+        has_qualifying = any(qualifying_fields.intersection(vals.keys()) for vals in vals_list)
 
         if not has_qualifying:
             return records
@@ -123,17 +119,11 @@ class CrmLead(models.Model):
         records._compute_lead_rating()
 
         threshold = float(
-            self.env["ir.config_parameter"]
-            .sudo()
-            .get_param("abc_crm.passing_rate", default=70.0)
+            self.env["ir.config_parameter"].sudo().get_param("abc_crm.passing_rate", default=70.0)
         )
 
-        qualified = records.filtered(
-            lambda lead: lead.type == "lead" and lead.rating >= threshold
-        )
-        unqualified = records.filtered(
-            lambda lead: lead.type == "lead" and lead.rating < threshold
-        )
+        qualified = records.filtered(lambda lead: lead.type == "lead" and lead.rating >= threshold)
+        unqualified = records.filtered(lambda lead: lead.type == "lead" and lead.rating < threshold)
 
         if qualified:
             qualified.convert_opportunity(
@@ -170,22 +160,16 @@ class CrmLead(models.Model):
         self._compute_lead_rating()
 
         threshold = float(
-            self.env["ir.config_parameter"]
-            .sudo()
-            .get_param("abc_crm.passing_rate", default=70.0)
+            self.env["ir.config_parameter"].sudo().get_param("abc_crm.passing_rate", default=70.0)
         )
 
         changed = self.filtered(lambda lead: lead.rating != rating_before[lead.id])
 
         qualified = changed.filtered(
-            lambda lead: (
-                lead.type in ("lead", "opportunity") and lead.rating >= threshold
-            )
+            lambda lead: lead.type in ("lead", "opportunity") and lead.rating >= threshold
         )
         unqualified = changed.filtered(
-            lambda lead: (
-                lead.type in ("lead", "opportunity") and lead.rating < threshold
-            )
+            lambda lead: lead.type in ("lead", "opportunity") and lead.rating < threshold
         )
 
         if qualified:
@@ -269,9 +253,7 @@ class CrmLead(models.Model):
             today = fields.Date.context_today(lead)
 
             if lead.target_completion_date < today:
-                raise ValidationError(
-                    _("Target Completion Date cannot be in the past.")
-                )
+                raise ValidationError(_("Target Completion Date cannot be in the past."))
 
     @api.constrains("phone", "country_id")
     def _check_phone(self):
@@ -286,9 +268,7 @@ class CrmLead(models.Model):
             try:
                 phone_parse(phone, country_code)
             except UserError as exc:
-                raise ValidationError(
-                    _("Please enter a valid phone or landline number.")
-                ) from exc
+                raise ValidationError(_("Please enter a valid phone or landline number.")) from exc
 
     def convert_opportunity(self, partner=False, user_ids=False, team_id=False):
         result = super().convert_opportunity(
@@ -306,9 +286,7 @@ class CrmLead(models.Model):
 
         group = self.env.ref("abc_crm.group_sales_manager", raise_if_not_found=False)
 
-        managers = (
-            group.user_ids.mapped("partner_id") if group else self.env["res.partner"]
-        )
+        managers = group.user_ids.mapped("partner_id") if group else self.env["res.partner"]
 
         if managers:
             self.message_subscribe(partner_ids=managers.ids)
