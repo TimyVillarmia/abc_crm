@@ -45,7 +45,7 @@ class CrmLead(models.Model):
     def _compute_is_restricted(self):
         is_restricted = self.env.user.has_group(
             "abc_crm.group_marketing"
-        ) or self.env.user.has_group("abc_crm.group_general_manager")
+        ) or self.env.user.has_group("abc_crm.group_sales_representative")
         for lead in self:
             lead.is_restricted = is_restricted
 
