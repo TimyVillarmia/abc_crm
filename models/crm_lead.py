@@ -68,6 +68,8 @@ class CrmLead(models.Model):
             )
 
     def _check_forbidden(self, vals):
+        if self.env.context.get("no_forbidden_check"):
+            return
         allowed = {"stage_id", "active"}
         forbidden = set(vals) - allowed
 
@@ -134,13 +136,13 @@ class CrmLead(models.Model):
         unqualified = records.filtered(lambda lead: lead.type == "lead" and lead.rating < threshold)
 
         if qualified:
-            qualified.convert_opportunity(
+            qualified.with_context(no_forbidden_check=True).convert_opportunity(
                 partner=False,
                 user_ids=False,
                 team_id=False,
             )
         if unqualified:
-            unqualified.action_set_lost()
+            unqualified.with_context(no_forbidden_check=True).action_set_lost()
 
         return records
 
@@ -181,13 +183,13 @@ class CrmLead(models.Model):
         )
 
         if qualified:
-            qualified.convert_opportunity(
+            qualified.with_context(no_forbidden_check=True).convert_opportunity(
                 partner=False,
                 user_ids=False,
                 team_id=False,
             )
         if unqualified:
-            unqualified.action_set_lost()
+            unqualified.with_context(no_forbidden_check=True).action_set_lost()
 
         return res
 
