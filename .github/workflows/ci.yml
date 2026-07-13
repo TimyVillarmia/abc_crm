@@ -15,6 +15,7 @@ on:
             - "static/tests/**/*.js"
             - "__manifest__.py"
             - "pyproject.toml"
+            - "requirements-dev.txt"
             - ".pre-commit-config.yaml"
             - "docker-compose.yaml"
             - ".github/workflows/ci.yml"
@@ -31,6 +32,7 @@ on:
             - "static/tests/**/*.js"
             - "__manifest__.py"
             - "pyproject.toml"
+            - "requirements-dev.txt"
             - ".pre-commit-config.yaml"
             - "docker-compose.yaml"
             - ".github/workflows/ci.yml"
@@ -40,7 +42,7 @@ permissions:
     pull-requests: read
 
 env:
-    PYTHON_VERSION: "3.14"
+    PYTHON_VERSION: "3.12"
     MODULE_NAME: abc_crm
     TEST_DB: abc_crm_test
 
@@ -67,12 +69,12 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: ~/.cache/pre-commit
-                  key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml', 'pyproject.toml') }}
+                  key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml', 'pyproject.toml', 'requirements-dev.txt') }}
 
             - name: Install linting tools
               run: |
                   python -m pip install --upgrade pip
-                  pip install pre-commit pylint pylint-odoo
+                  pip install --requirement requirements-dev.txt
 
             - name: Run pre-commit checks
               run: |
