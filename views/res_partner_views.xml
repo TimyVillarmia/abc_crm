@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="base.action_partner_form" model="ir.actions.act_window">
+        <field name="domain">['!', ('user_ids.share', '=', False)]</field>
+    </record>
+</odoo>
