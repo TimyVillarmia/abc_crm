@@ -37,11 +37,12 @@ repos:
         files: (^|/)odoo\.conf$
 
       - id: no-env-files
-        name: Prevent committing env files
+        name: Prevent committing local env files
         entry: bash -c 'echo "Do not commit .env files."; exit 1'
         language: system
         pass_filenames: false
         files: (^|/)\.env(?:\..+)?$
+        exclude: (^|/)\.env\.example$
 
       - id: pylint-odoo
         name: Pylint Odoo check
