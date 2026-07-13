@@ -7,3 +7,11 @@ access_crm_team_member_leader,abc.crm.team.member.leader,sales_team.model_crm_te
 access_crm_team_leader,abc.crm.team.leader,sales_team.model_crm_team,abc_crm.group_sales_team_leader,1,1,1,0
 access_crm_team_representative,abc.crm.sales.representative,sales_team.model_crm_team,abc_crm.group_sales_representative,1,0,0,0
 access_sales_order_representative,sales.order.sales.representative,sale_crm.model_sale_order,abc_crm.group_sales_representative,1,1,1,0
+access_utm_campaign_marketing,abc.crm.utm.campaign.marketing,utm.model_utm_campaign,abc_crm.group_marketing,1,1,1,0
+access_utm_campaign_gen_manager,abc.crm.utm.campaign.gen.manager,utm.model_utm_campaign,abc_crm.group_general_manager,1,1,1,1
+access_utm_medium_marketing,abc.crm.utm.medium.marketing,utm.model_utm_medium,abc_crm.group_marketing,1,1,1,0
+access_utm_medium_gen_manager,abc.crm.utm.medium.gen.manager,utm.model_utm_medium,abc_crm.group_general_manager,1,1,1,1
+access_utm_source_marketing,abc.crm.utm.source.marketing,utm.model_utm_source,abc_crm.group_marketing,1,1,1,0
+access_utm_source_gen_manager,abc.crm.utm.source.gen.manager,utm.model_utm_source,abc_crm.group_general_manager,1,1,1,1
+access_link_tracker_marketing,abc.crm.link.tracker.marketing,link_tracker.model_link_tracker,abc_crm.marketing,1,1,1,0
+access_link_tracker_gen_manager,abc.crm.link.tracker.gen.manager,link_tracker.model_link_tracker,abc_crm.general_manager,1,1,1,0
