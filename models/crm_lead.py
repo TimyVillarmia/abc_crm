@@ -79,6 +79,8 @@ class CrmLead(models.Model):
                 raise UserError(
                     "Opportunity cannot be modified. Move opportunity out of the stage to edit"
                 )
+            if lead.won_status == "lost":
+                raise UserError("Opportunity cannot be modified. Restore lead to edit")
 
     def action_new_quotation(self):
         if self.env.user.has_group("abc_crm.group_marketing"):
