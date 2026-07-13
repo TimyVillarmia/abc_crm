@@ -12,6 +12,7 @@ bearer-authenticated JSON endpoint, and a public multi-step website form.
 .
 ├── .github/workflows/ci.yml
 ├── .github/pull_request_template.md
+├── .env.example
 ├── .pre-commit-config.yaml
 ├── __init__.py
 ├── __manifest__.py
@@ -22,11 +23,13 @@ bearer-authenticated JSON endpoint, and a public multi-step website form.
 │   ├── lost_reason_data.xml
 │   └── res.region.csv
 ├── docker-compose.yaml
+├── Makefile
 ├── models/
 │   ├── crm_lead.py
 │   ├── res_city.py
 │   └── res_region.py
 ├── pyproject.toml
+├── requirements-dev.txt
 ├── security/
 │   ├── ir.model.access.csv
 │   ├── ir_rule.xml
@@ -49,7 +52,7 @@ bearer-authenticated JSON endpoint, and a public multi-step website form.
     └── website_snippets.xml
 ```
 
-## Local Stack
+## Local Development
 
 Local development uses Docker Compose:
 
@@ -63,13 +66,37 @@ Local development uses Docker Compose:
 - Odoo data volume: `abc-crm-web-data`
 - PostgreSQL data volume: `abc-crm-db-data`
 
+Prerequisites: Docker Compose, GNU Make, and Python 3. The Odoo image runs
+Python 3.12, which is the compatibility target for this addon. Host Python is
+used only for developer tools; `make test` validates the addon inside the Odoo
+runtime. Set up the pinned local toolchain once, then install the pre-commit
+hook:
+
+```bash
+make env
+make setup
+make hooks
+```
+
+`make env` copies `.env.example` to the ignored `.env` file without replacing
+an existing local configuration. Edit `.env` to change local ports or database
+credentials; it must never contain staging or production credentials.
+
+Run `make help` to list all supported commands and their default variables.
+
+### Local Stack
+
 Start the stack:
 
 ```bash
-docker compose up -d
+make up
 ```
 
-Open Odoo:
+The generated `.env` defaults to `admin` PostgreSQL/Odoo credentials, database
+`postgres`, and ports `8069`/`8072`. Change `ODOO_PORT` or
+`ODOO_LONGPOLLING_PORT` when those host ports are already in use.
+
+Open Odoo at:
 
 ```text
 http://localhost:8069
@@ -78,156 +105,129 @@ http://localhost:8069
 Follow logs:
 
 ```bash
-docker compose logs -f web
+make logs
 ```
 
 Stop the stack:
 
 ```bash
-docker compose down
+make down
 ```
 
-Remove local Odoo/PostgreSQL data:
+Show its status:
 
 ```bash
-docker compose down -v
+make status
 ```
 
-## Addon Install and Upgrade
+Remove local Odoo/PostgreSQL data only when needed:
+
+```bash
+make reset CONFIRM=1
+```
+
+`reset` removes all Compose volumes and cannot run without the explicit
+confirmation variable.
+
+### Addon Install and Upgrade
 
 Install the addon into a local database:
 
 ```bash
-docker compose run --rm web odoo \
-  -d abc_crm_dev \
-  --init abc_crm \
-  --stop-after-init
+make install
 ```
 
 Upgrade after Python, XML, CSV, security, or manifest changes:
 
 ```bash
-docker compose run --rm web odoo \
-  -d abc_crm_dev \
-  --update abc_crm \
-  --stop-after-init
+make upgrade
 ```
 
 Open an Odoo shell:
 
 ```bash
-docker compose run --rm web odoo shell -d abc_crm_dev
+make shell
 ```
 
 ## Developer Checks
 
-Create a local virtual environment for tooling:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install ruff pre-commit pylint pylint-odoo
-```
-
 Ruff is configured in `pyproject.toml`:
 
-- Python target: `py314`
-- Line length: `88`
+- Python target: `py312` (matching the Odoo runtime)
+- Line length: `100`
 - Enabled lint families: `E`, `F`, `I`
 - Format style: double quotes, spaces, automatic line endings
 
-Run local checks:
+Run the same pre-commit checks used by CI:
 
 ```bash
-pre-commit run --all-files
+make lint
 ```
 
-Apply safe Ruff fixes and formatting:
+Run the manual Odoo Pylint check, or both quality suites:
 
 ```bash
-ruff check . --fix
-ruff format .
+make pylint
+make check
 ```
 
-Install pre-commit hooks:
+Apply Ruff fixes and formatting deliberately:
 
 ```bash
-pre-commit install --install-hooks
-test -x .git/hooks/pre-commit
+make format
 ```
 
-Run all pre-commit hooks manually:
+`make lint` can apply the fixes configured by pre-commit; use `make format`
+when formatting is the intended action. `make check` also includes the
+manual `pylint-odoo` check.
+
+The Makefile accepts overrides without editing it. For example:
 
 ```bash
-pre-commit run --all-files
+make install DEV_DB=my_local_db
+make test TEST_TAG=/abc_crm:TestCrmLead
 ```
 
-The pre-commit configuration checks whitespace, EOF, YAML, TOML, XML, Python syntax, large files, merge conflicts, case conflicts, line endings, debug statements, private keys, Ruff lint/format, and staged `odoo.conf` or `.env` files. The `pylint-odoo` hook is configured for manual runs.
+`make test` uses the local `.env` database user and maintenance database, but
+always recreates only `abc_crm_test` by default. Override `TEST_DB` when a
+separate disposable test database is required.
+
+`requirements-dev.txt` pins the complete developer-tool dependency set used by
+both `make setup` and CI. Update its pins together and validate the change with
+the local checks and Odoo test target.
+
+The pre-commit configuration checks whitespace, EOF, YAML, TOML, XML, Python syntax, large files, merge conflicts, case conflicts, line endings, debug statements, private keys, Ruff lint/format, and staged `odoo.conf` or local `.env` files. `.env.example` is intentionally allowed. The `pylint-odoo` hook is configured for manual runs.
 
 ## Tests
 
 Run all Odoo tests in a fresh database:
 
 ```bash
-docker compose up -d db
-docker compose exec db dropdb -U admin --if-exists abc_crm_test
-
-docker compose run --rm web odoo \
-  -d abc_crm_test \
-  --init abc_crm \
-  --test-enable \
-  --test-tags=/abc_crm \
-  --stop-after-init \
-  --log-level=test
+make test
 ```
 
 Run only the lead controller test class:
 
 ```bash
-docker compose run --rm web odoo \
-  -d abc_crm_test \
-  --update abc_crm \
-  --test-enable \
-  --test-tags=/abc_crm:TestAbcCrmLeadController \
-  --stop-after-init \
-  --log-level=test
+make test TEST_TAG=/abc_crm:TestAbcCrmLeadController
 ```
 
 Run only the CRM lead model test class:
 
 ```bash
-docker compose run --rm web odoo \
-  -d abc_crm_test \
-  --update abc_crm \
-  --test-enable \
-  --test-tags=/abc_crm:TestCrmLead \
-  --stop-after-init \
-  --log-level=test
+make test TEST_TAG=/abc_crm:TestCrmLead
 ```
 
 Run only the website lead controller test class:
 
 ```bash
-docker compose run --rm web odoo \
-  -d abc_crm_test \
-  --update abc_crm \
-  --test-enable \
-  --test-tags=/abc_crm:TestAbcCrmWebsiteLeadController \
-  --stop-after-init \
-  --log-level=test
+make test TEST_TAG=/abc_crm:TestAbcCrmWebsiteLeadController
 ```
 
 Run only the website lead browser security test class:
 
 ```bash
-docker compose run --rm web odoo \
-  -d abc_crm_test \
-  --update abc_crm \
-  --test-enable \
-  --test-tags=/abc_crm:TestAbcCrmWebsiteLeadBrowser \
-  --stop-after-init \
-  --log-level=test
+make test TEST_TAG=/abc_crm:TestAbcCrmWebsiteLeadBrowser
 ```
 
 `tests/test_crm_lead.py` uses `TransactionCase` and verifies:
@@ -526,7 +526,10 @@ There is no separate Node or SCSS build job. The repository does not include a `
 - `data/config_parameters.xml` defines `abc_crm.passing_rate`, and `models/crm_lead.py` reads the same key with a code default of `70.0`.
 - Both `/abc_crm/lead` and `/abc_crm/website/lead` require `yes`/`no` strings
   for all six qualification fields.
-- `pyproject.toml` is checked in and configures Ruff for Python 3.14.
+- `pyproject.toml` is checked in and configures Ruff for Python 3.12, matching
+  the Odoo runtime.
+- `requirements-dev.txt` is the pinned developer-tool dependency source for
+  local setup and CI; addon runtime dependencies remain in `__manifest__.py`.
 - `.pre-commit-config.yaml` is checked in and should be used for local quality gates.
 - `.github/pull_request_template.md` is checked in and documents expected PR context, Odoo impact, testing, screenshots, migration notes, and review checklist items.
 - Docker-based Odoo tests are the expected integration verification path for this addon.
