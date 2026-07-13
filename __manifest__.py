@@ -22,6 +22,7 @@
         "data/config_parameters.xml",
         "data/lost_reason_data.xml",
         "views/crm_lead_views.xml",
+        "views/crm_team_views.xml",
         "views/res_partner_actions.xml",
         "views/website_snippets.xml",
     ],
